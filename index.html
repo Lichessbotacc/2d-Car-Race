@@ -3,397 +3,310 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2D Racing Arena</title>
+<title>Racing Arena</title>
 
 <style>
 body{
-    margin:0;
-    overflow:hidden;
-    background:#111;
-    font-family:Arial;
-    color:white;
+  margin:0;
+  overflow:hidden;
+  background:#1b1b1b;
+  font-family:Arial;
+  color:white;
 }
 
 canvas{
-    display:block;
-    background:#3ea043;
+  display:block;
 }
 
 #ui{
-    position:absolute;
-    top:10px;
-    left:10px;
-    z-index:10;
-    background:rgba(0,0,0,0.8);
-    padding:12px;
-    border-radius:12px;
-    width:250px;
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:rgba(0,0,0,0.75);
+  padding:12px;
+  border-radius:12px;
+  width:260px;
+  z-index:10;
 }
 
 input,button{
-    width:100%;
-    margin-top:6px;
-    padding:8px;
-    border:none;
-    border-radius:8px;
-    font-size:14px;
+  width:100%;
+  margin-top:6px;
+  padding:8px;
+  border:none;
+  border-radius:8px;
 }
 
 button{
-    background:#00c27a;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
+  background:#00c27a;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 button:hover{
-    background:#00db8a;
+  background:#00e08c;
 }
 
-#scoreboard{
-    margin-top:10px;
-    max-height:300px;
-    overflow:auto;
-    font-size:14px;
+#score{
+  margin-top:10px;
+  font-size:13px;
+  max-height:280px;
+  overflow:auto;
 }
 </style>
 </head>
 <body>
 
 <div id="ui">
-
 <h2>🏁 Racing Arena</h2>
 
 Bots:
-<input type="number" id="botCount" value="6" min="2" max="20">
+<input id="bots" type="number" value="6" min="2" max="20">
 
 Runden:
-<input type="number" id="laps" value="5" min="1" max="50">
+<input id="laps" type="number" value="5" min="1" max="20">
 
-<button onclick="startRace()">Rennen starten</button>
+<button onclick="start()">START</button>
 
-<div id="scoreboard"></div>
-
+<div id="score"></div>
 </div>
 
-<canvas id="game"></canvas>
+<canvas id="c"></canvas>
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+c.width = innerWidth;
+c.height = innerHeight;
 
-const trackCenterX = canvas.width/2;
-const trackCenterY = canvas.height/2;
+const cx = c.width/2;
+const cy = c.height/2;
 
-const trackOuterRX = 360;
-const trackOuterRY = 220;
+// ================= TRACK MASK =================
+const track = document.createElement("canvas");
+const tctx = track.getContext("2d");
 
-const trackInnerRX = 220;
-const trackInnerRY = 100;
+track.width = c.width;
+track.height = c.height;
 
-let racers = [];
-let raceRunning = false;
-let totalLaps = 5;
-
-const colors = [
-"#ff4d4d",
-"#4da6ff",
-"#ffd24d",
-"#66ff66",
-"#ff66ff",
-"#00ffff",
-"#ffffff",
-"#ff944d",
-"#9999ff",
-"#ff6699"
+// Checkpoints (für echte Strecke)
+const checkpoints = [
+  {x: cx+300, y: cy},
+  {x: cx, y: cy-200},
+  {x: cx-300, y: cy},
+  {x: cx, y: cy+200}
 ];
 
-class Racer{
+function buildTrack(){
 
-    constructor(name,color,index){
+  // Gras
+  tctx.fillStyle="#2e7d32";
+  tctx.fillRect(0,0,track.width,track.height);
 
-        this.name = name;
-        this.color = color;
+  // Straße (Ringbahn)
+  tctx.fillStyle="#555";
 
-        this.angle = Math.PI + (index * 0.15);
+  tctx.beginPath();
+  tctx.ellipse(cx,cy,340,220,0,0,Math.PI*2);
+  tctx.fill();
 
-        this.radius = (trackOuterRX + trackInnerRX)/2;
+  // Innen Gras Loch
+  tctx.globalCompositeOperation="destination-out";
+  tctx.beginPath();
+  tctx.ellipse(cx,cy,220,120,0,0,Math.PI*2);
+  tctx.fill();
+  tctx.globalCompositeOperation="source-over";
+}
 
-        this.x = trackCenterX + Math.cos(this.angle) * 290;
-        this.y = trackCenterY + Math.sin(this.angle) * 160;
+// ================= CAR =================
+class Car{
+  constructor(i){
 
-        this.speed = 1 + Math.random() * 1.5;
-        this.targetSpeed = this.speed;
+    this.x = cx + 260;
+    this.y = cy;
 
-        this.width = 28;
-        this.height = 16;
+    this.angle = 0;
+    this.speed = 2;
 
-        this.rotation = this.angle + Math.PI/2;
+    this.targetSpeed = this.speed;
 
-        this.laps = 0;
-        this.finished = false;
+    this.w = 22;
+    this.h = 12;
 
-        this.points = 0;
+    this.color = `hsl(${i*40},80%,60%)`;
 
-        this.lastCross = false;
+    this.cp = 0;
+    this.laps = 0;
+    this.finished = false;
+    this.points = 0;
 
-        setInterval(()=>{
-            this.targetSpeed = 0.8 + Math.random() * 2.8;
-        },1000);
+    setInterval(()=>{
+      this.targetSpeed = 1 + Math.random()*3;
+    },1000);
+  }
+
+  update(){
+
+    if(this.finished) return;
+
+    // Speed smooth random
+    this.speed += (this.targetSpeed - this.speed)*0.05;
+
+    let target = checkpoints[this.cp];
+
+    let dx = target.x - this.x;
+    let dy = target.y - this.y;
+
+    let dist = Math.hypot(dx,dy);
+
+    let desiredAngle = Math.atan2(dy,dx);
+
+    this.angle += (desiredAngle - this.angle)*0.08;
+
+    let nx = this.x + Math.cos(this.angle)*this.speed;
+    let ny = this.y + Math.sin(this.angle)*this.speed;
+
+    // Road check
+    if(onRoad(nx,ny)){
+      this.x = nx;
+      this.y = ny;
+    }else{
+      this.angle += 0.5;
+      this.speed *= 0.6;
     }
 
-    update(){
+    // Checkpoint
+    if(dist < 50){
+      this.cp++;
 
-        if(this.finished) return;
+      if(this.cp >= checkpoints.length){
+        this.cp = 0;
+        this.laps++;
 
-        this.speed += (this.targetSpeed - this.speed) * 0.02;
-
-        this.angle += this.speed * 0.003;
-
-        this.rotation = this.angle + Math.PI/2;
-
-        this.x = trackCenterX + Math.cos(this.angle) * 290;
-        this.y = trackCenterY + Math.sin(this.angle) * 160;
-
-        // Kollisionssystem
-        racers.forEach(other=>{
-
-            if(other === this) return;
-
-            const dx = other.x - this.x;
-            const dy = other.y - this.y;
-
-            const dist = Math.sqrt(dx*dx + dy*dy);
-
-            if(dist < 24){
-
-                const push = (24 - dist) / 2;
-
-                const nx = dx / dist;
-                const ny = dy / dist;
-
-                this.x -= nx * push;
-                this.y -= ny * push;
-
-                other.x += nx * push;
-                other.y += ny * push;
-
-                this.speed *= 0.97;
-                other.speed *= 0.97;
-            }
-
-        });
-
-        // Runden zählen
-        const crossing =
-            this.x > trackCenterX + 280 &&
-            Math.abs(this.y - trackCenterY) < 40;
-
-        if(crossing && !this.lastCross){
-
-            this.laps++;
-
-            if(this.laps >= totalLaps){
-                this.finished = true;
-            }
+        if(this.laps >= maxLaps){
+          this.finished = true;
         }
-
-        this.lastCross = crossing;
+      }
     }
 
-    draw(){
+    // Car collision
+    cars.forEach(o=>{
+      if(o===this) return;
 
-        ctx.save();
+      let d = Math.hypot(o.x-this.x,o.y-this.y);
 
-        ctx.translate(this.x,this.y);
-        ctx.rotate(this.rotation);
+      if(d < 22){
+        let push = (22-d)/2;
 
-        // Schatten
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.fillRect(-14,-8,28,16);
+        let nx = (this.x - o.x)/d;
+        let ny = (this.y - o.y)/d;
 
-        // Auto
-        ctx.fillStyle = this.color;
-        ctx.fillRect(-14,-8,28,16);
+        this.x += nx*push;
+        this.y += ny*push;
 
-        // Fenster
-        ctx.fillStyle = "#222";
-        ctx.fillRect(-6,-6,12,12);
+        o.x -= nx*push;
+        o.y -= ny*push;
 
-        ctx.restore();
-
-        ctx.fillStyle = "white";
-        ctx.font = "12px Arial";
-        ctx.fillText(this.name,this.x-18,this.y-16);
-    }
-
-}
-
-function drawTrack(){
-
-    // Straße außen
-    ctx.beginPath();
-    ctx.ellipse(
-        trackCenterX,
-        trackCenterY,
-        trackOuterRX,
-        trackOuterRY,
-        0,
-        0,
-        Math.PI*2
-    );
-    ctx.fillStyle = "#555";
-    ctx.fill();
-
-    // Gras innen
-    ctx.beginPath();
-    ctx.ellipse(
-        trackCenterX,
-        trackCenterY,
-        trackInnerRX,
-        trackInnerRY,
-        0,
-        0,
-        Math.PI*2
-    );
-    ctx.fillStyle = "#3ea043";
-    ctx.fill();
-
-    // Mittellinie
-    ctx.beginPath();
-    ctx.ellipse(
-        trackCenterX,
-        trackCenterY,
-        290,
-        160,
-        0,
-        0,
-        Math.PI*2
-    );
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 4;
-    ctx.setLineDash([20,15]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Startlinie
-    ctx.fillStyle = "white";
-
-    for(let i=0;i<8;i++){
-
-        ctx.fillRect(
-            trackCenterX + 280,
-            trackCenterY - 40 + i*10,
-            10,
-            5
-        );
-    }
-
-}
-
-function updateScoreboard(){
-
-    racers.sort((a,b)=>{
-
-        if(a.laps === b.laps){
-            return b.angle - a.angle;
-        }
-
-        return b.laps - a.laps;
+        this.speed *= 0.9;
+      }
     });
+  }
 
-    let html = "<h3>🏆 Ranking</h3>";
+  draw(){
 
-    racers.forEach((r,i)=>{
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
 
-        html += `
-        <div>
-        ${i+1}. ${r.name}
-        | Runde ${Math.min(r.laps,totalLaps)}/${totalLaps}
-        | ${r.points} Punkte
-        </div>
-        `;
-    });
+    ctx.fillStyle=this.color;
+    ctx.fillRect(-11,-6,22,12);
 
-    document.getElementById("scoreboard").innerHTML = html;
+    ctx.fillStyle="#111";
+    ctx.fillRect(-5,-4,10,8);
+
+    ctx.restore();
+  }
 }
 
-function finishRace(){
-
-    raceRunning = false;
-
-    const points = [10,7,5,3,1];
-
-    racers.forEach((r,i)=>{
-        r.points += points[i] || 0;
-    });
-
-    updateScoreboard();
-
-    setTimeout(()=>{
-        alert("🏁 Rennen beendet!");
-    },200);
+// ================= CHECK ROAD =================
+function onRoad(x,y){
+  let p = tctx.getImageData(x,y,1,1).data;
+  return p[0]>100 && p[1]>100;
 }
 
-function startRace(){
+// ================= GAME =================
+let cars=[];
+let maxLaps=5;
+let running=false;
 
-    racers = [];
+function start(){
 
-    totalLaps = parseInt(
-        document.getElementById("laps").value
-    );
+  cars=[];
+  buildTrack();
 
-    const botCount = parseInt(
-        document.getElementById("botCount").value
-    );
+  let n = +document.getElementById("bots").value;
+  maxLaps = +document.getElementById("laps").value;
 
-    for(let i=0;i<botCount;i++){
+  for(let i=0;i<n;i++){
+    cars.push(new Car(i));
+  }
 
-        racers.push(
-            new Racer(
-                "Bot "+(i+1),
-                colors[i % colors.length],
-                i
-            )
-        );
-    }
-
-    raceRunning = true;
+  running=true;
 }
 
+// ================= SCORE =================
+function score(){
+
+  cars.sort((a,b)=>b.laps-a.laps);
+
+  let html="<h3>🏆</h3>";
+
+  cars.forEach((c,i)=>{
+    html+=`${i+1}. Lap ${c.laps} | ${c.points} pts<br>`;
+  });
+
+  document.getElementById("score").innerHTML=html;
+}
+
+// ================= LOOP =================
 function loop(){
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,c.width,c.height);
 
-    drawTrack();
+  ctx.drawImage(track,0,0);
 
-    let allFinished = true;
+  // checkpoints
+  ctx.fillStyle="yellow";
+  checkpoints.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,10,0,Math.PI*2);
+    ctx.fill();
+  });
 
-    racers.forEach(r=>{
+  let done=true;
 
-        if(raceRunning){
-            r.update();
-        }
+  cars.forEach(c=>{
+    if(running) c.update();
+    c.draw();
+    if(!c.finished) done=false;
+  });
 
-        r.draw();
+  if(running && done){
+    running=false;
 
-        if(!r.finished){
-            allFinished = false;
-        }
+    cars.sort((a,b)=>b.laps-a.laps);
 
+    cars.forEach((c,i)=>{
+      c.points += [10,7,5,3,1][i] || 1;
     });
+  }
 
-    updateScoreboard();
+  score();
 
-    if(raceRunning && allFinished && racers.length > 0){
-        finishRace();
-    }
-
-    requestAnimationFrame(loop);
+  requestAnimationFrame(loop);
 }
 
 loop();
