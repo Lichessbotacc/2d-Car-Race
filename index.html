@@ -203,10 +203,13 @@ class Car{
     ctx.fillStyle=this.color;
     ctx.fillRect(-10,-6,20,12);
 
-    ctx.fillStyle="#111";
-    ctx.fillRect(-4,-3,8,6);
-
     ctx.restore();
+
+  // 🏷️ NAME ÜBER AUTO
+    ctx.fillStyle="white";
+    ctx.font="12px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(this.name, this.x, this.y - 15);
   }
 }
 
@@ -311,9 +314,14 @@ function drawTrack(){
 // ================= SCORE (FIXED!) =================
 function score(){
 
-  let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
+  // Fortschritt = Runden + Checkpoints
+  cars.forEach(c=>{
+    c.progress = c.lap * 1000 + c.cp;
+  });
 
-  let html="<h3>🏆 Ranking</h3>";
+  let sorted=[...cars].sort((a,b)=>b.progress-a.progress);
+
+  let html="<h3>🏆 Live Ranking</h3>";
 
   sorted.forEach((c,i)=>{
     html+=`${i+1}. ${c.name} | Lap ${c.lap}<br>`;
