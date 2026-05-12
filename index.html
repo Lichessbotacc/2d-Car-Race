@@ -49,7 +49,7 @@ c.height=innerHeight;
 const cx=c.width/2;
 const cy=c.height/2;
 
-// ================= TRACK (mehrere Checkpoints!) =================
+// ================= TRACK =================
 const track=[
   {x:cx+300,y:cy},
   {x:cx+200,y:cy-200},
@@ -81,11 +81,17 @@ class Car{
     this.color=`hsl(${i*50},80%,60%)`;
 
     this.finished=false;
-    this.points=0;
+
+    // 👉 NEU: eigene “Spur” (innen/außen)
+    this.offset = (Math.random()*2-1) * trackWidth * 0.6;
+    this.offsetTarget = this.offset;
 
     setInterval(()=>{
       this.targetSpeed=1+Math.random()*3;
-    },1000);
+
+      // 👉 NEU: Spur ändert sich langsam → realistisches Racing
+      this.offsetTarget = (Math.random()*2-1) * trackWidth * 0.6;
+    },1200);
   }
 
   update(){
@@ -105,6 +111,10 @@ class Car{
 
     this.angle += (ang-this.angle)*0.12;
 
+    // 👉 NEU: sanfte Spurbewegung (innen/außen)
+    this.offset += (this.offsetTarget - this.offset)*0.02;
+
+    // normale Bewegung
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
 
@@ -119,7 +129,7 @@ class Car{
       this.speed*=0.9;
     }
 
-    // checkpoint FIX (kein Bug mehr!)
+    // checkpoint
     if(dist<50){
       this.cp++;
 
@@ -138,11 +148,8 @@ class Car{
       if(o===this) return;
 
       let d=Math.hypot(o.x-this.x,o.y-this.y);
-
       if(d<22){
-
         let push=(22-d)/2;
-
         let nx=(this.x-o.x)/d;
         let ny=(this.y-o.y)/d;
 
@@ -163,6 +170,7 @@ class Car{
     ctx.translate(this.x,this.y);
     ctx.rotate(this.angle);
 
+    // Auto
     ctx.fillStyle=this.color;
     ctx.fillRect(-10,-6,20,12);
 
@@ -170,10 +178,16 @@ class Car{
     ctx.fillRect(-4,-3,8,6);
 
     ctx.restore();
+
+    // 👉 NAME FIX
+    ctx.fillStyle="white";
+    ctx.font="12px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(this.name, this.x, this.y - 15);
   }
 }
 
-// ================= TRACK HELP =================
+// ================= HELP =================
 function closest(x,y){
 
   let best=null;
@@ -186,7 +200,7 @@ function closest(x,y){
 
     let p=project(x,y,a,b);
 
-    let d=Math.hypot(p.x-x,p.y-y);
+    let d=Math.hypot(p.x-x,p.y-p.y);
 
     if(d<bd){
       bd=d;
@@ -233,7 +247,7 @@ function start(){
   running=true;
 }
 
-// ================= DRAW TRACK =================
+// ================= TRACK =================
 function drawTrack(){
 
   ctx.strokeStyle="#555";
@@ -254,17 +268,9 @@ function drawTrack(){
   ctx.setLineDash([10,10]);
   ctx.stroke();
   ctx.setLineDash([]);
-
-  // checkpoints sichtbar
-  ctx.fillStyle="yellow";
-  track.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,6,0,Math.PI*2);
-    ctx.fill();
-  });
 }
 
-// ================= SCORE (FIXED!) =================
+// ================= SCORE =================
 function score(){
 
   let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
@@ -295,10 +301,6 @@ function loop(){
 
   if(running && done){
     running=false;
-
-    cars.forEach((c,i)=>{
-      c.points += [10,7,5,3,1][i] || 1;
-    });
   }
 
   score();
