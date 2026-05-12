@@ -17,6 +17,24 @@ width:260px;color:white;
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
 #score{margin-top:10px;font-size:13px;}
+
+/* STEERING WHEEL */
+#wheel{
+width:120px;height:120px;
+margin:10px auto;
+border-radius:50%;
+border:3px solid white;
+position:relative;
+touch-action:none;
+}
+#needle{
+position:absolute;
+width:4px;height:50px;
+background:red;
+top:10px;left:50%;
+transform-origin:bottom center;
+transform:rotate(0rad);
+}
 </style>
 </head>
 
@@ -25,6 +43,9 @@ button{background:#00c27a;color:white;font-weight:bold;}
 <div id="ui">
 <h3>🏁 Racing Arena</h3>
 
+Dein Name:
+<input id="playerName" value="Player">
+
 Bots:
 <input id="bots" type="number" value="6">
 
@@ -32,6 +53,10 @@ Runden:
 <input id="laps" type="number" value="5">
 
 <button onclick="start()">START</button>
+
+<div id="wheel">
+  <div id="needle"></div>
+</div>
 
 <div id="score"></div>
 </div>
@@ -49,7 +74,7 @@ c.height=innerHeight;
 const cx=c.width/2;
 const cy=c.height/2;
 
-// ================= TRACK (mehrere Checkpoints!) =================
+// ================= TRACK =================
 const track=[
   {x:cx+300,y:cy},
   {x:cx+200,y:cy-200},
@@ -61,11 +86,37 @@ const track=[
 
 const trackWidth=70;
 
+// ================= STEERING =================
+let steerAngle=0;
+let steerPower=0;
+
+const wheel=document.getElementById("wheel");
+const needle=document.getElementById("needle");
+
+let dragging=false;
+
+wheel.addEventListener("mousedown",()=>dragging=true);
+window.addEventListener("mouseup",()=>dragging=false);
+
+window.addEventListener("mousemove",(e)=>{
+  if(!dragging) return;
+
+  let r=wheel.getBoundingClientRect();
+  let x=e.clientX-(r.left+60);
+  let y=e.clientY-(r.top+60);
+
+  steerAngle=Math.atan2(y,x);
+  steerPower=Math.min(1,Math.hypot(x,y)/60);
+
+  needle.style.transform=`rotate(${steerAngle}rad)`;
+});
+
 // ================= CAR =================
 class Car{
-  constructor(i,name){
+  constructor(i,name,isPlayer=false){
 
     this.name=name;
+    this.isPlayer=isPlayer;
 
     this.x=track[0].x;
     this.y=track[0].y;
@@ -78,21 +129,20 @@ class Car{
     this.speed=2;
     this.targetSpeed=2;
 
-    this.color=`hsl(${i*50},80%,60%)`;
+    this.color=isPlayer?"white":`hsl(${i*50},80%,60%)`;
 
     this.finished=false;
-    this.points=0;
 
     setInterval(()=>{
-      this.targetSpeed=1+Math.random()*3;
+      if(!this.isPlayer){
+        this.targetSpeed=1+Math.random()*3;
+      }
     },1000);
   }
 
   update(){
 
     if(this.finished) return;
-
-    this.speed += (this.targetSpeed-this.speed)*0.05;
 
     let t=track[this.cp];
 
@@ -103,58 +153,37 @@ class Car{
 
     let ang=Math.atan2(dy,dx);
 
-    this.angle += (ang-this.angle)*0.12;
+    // ================= PLAYER CONTROL =================
+    if(this.isPlayer){
+      this.angle += (steerAngle-this.angle)*0.2;
+      this.speed = 1 + steerPower*4;
+    } else {
+      this.angle += (ang-this.angle)*0.12;
+      this.speed += (this.targetSpeed-this.speed)*0.05;
+    }
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
 
-    // Strecke erzwingen
+    // track clamp
     let center=closest(this.x,this.y);
-
     let d=Math.hypot(center.x-this.x,center.y-this.y);
 
     if(d>trackWidth){
-      this.x += (center.x-this.x)*0.08;
-      this.y += (center.y-this.y)*0.08;
+      this.x+=(center.x-this.x)*0.08;
+      this.y+=(center.y-this.y)*0.08;
       this.speed*=0.9;
     }
 
-    // checkpoint FIX (kein Bug mehr!)
+    // checkpoint
     if(dist<50){
       this.cp++;
-
       if(this.cp>=track.length){
         this.cp=0;
         this.lap++;
-
-        if(this.lap>=maxLaps){
-          this.finished=true;
-        }
+        if(this.lap>=maxLaps)this.finished=true;
       }
     }
-
-    // collision
-    cars.forEach(o=>{
-      if(o===this) return;
-
-      let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-      if(d<22){
-
-        let push=(22-d)/2;
-
-        let nx=(this.x-o.x)/d;
-        let ny=(this.y-o.y)/d;
-
-        this.x+=nx*push;
-        this.y+=ny*push;
-
-        o.x-=nx*push;
-        o.y-=ny*push;
-
-        this.speed*=0.9;
-      }
-    });
   }
 
   draw(){
@@ -166,14 +195,17 @@ class Car{
     ctx.fillStyle=this.color;
     ctx.fillRect(-10,-6,20,12);
 
-    ctx.fillStyle="#111";
-    ctx.fillRect(-4,-3,8,6);
-
     ctx.restore();
+
+    // NAME FIX
+    ctx.fillStyle="white";
+    ctx.font="12px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(this.name,this.x,this.y-15);
   }
 }
 
-// ================= TRACK HELP =================
+// ================= HELP =================
 function closest(x,y){
 
   let best=null;
@@ -209,10 +241,7 @@ function project(px,py,a,b){
 
   t=Math.max(0,Math.min(1,t));
 
-  return{
-    x:a.x+vx*t,
-    y:a.y+vy*t
-  };
+  return{x:a.x+vx*t,y:a.y+vy*t};
 }
 
 // ================= GAME =================
@@ -223,9 +252,16 @@ let running=false;
 function start(){
 
   cars=[];
+
   let n=+document.getElementById("bots").value;
   maxLaps=+document.getElementById("laps").value;
 
+  let name=document.getElementById("playerName").value;
+
+  // PLAYER
+  cars.push(new Car(999,name,true));
+
+  // BOTS
   for(let i=0;i<n;i++){
     cars.push(new Car(i,"Bot "+(i+1)));
   }
@@ -233,7 +269,7 @@ function start(){
   running=true;
 }
 
-// ================= DRAW TRACK =================
+// ================= TRACK =================
 function drawTrack(){
 
   ctx.strokeStyle="#555";
@@ -248,23 +284,9 @@ function drawTrack(){
 
   ctx.closePath();
   ctx.stroke();
-
-  ctx.strokeStyle="white";
-  ctx.lineWidth=2;
-  ctx.setLineDash([10,10]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // checkpoints sichtbar
-  ctx.fillStyle="yellow";
-  track.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,6,0,Math.PI*2);
-    ctx.fill();
-  });
 }
 
-// ================= SCORE (FIXED!) =================
+// ================= SCORE =================
 function score(){
 
   let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
@@ -293,14 +315,6 @@ function loop(){
     if(!c.finished)done=false;
   });
 
-  if(running && done){
-    running=false;
-
-    cars.forEach((c,i)=>{
-      c.points += [10,7,5,3,1][i] || 1;
-    });
-  }
-
   score();
 
   requestAnimationFrame(loop);
@@ -311,4 +325,4 @@ loop();
 </script>
 
 </body>
-</html>  Namen werden nicht angezeigt und die bots sollen realistisch mal innen mal außen fahren (nicht nur direkt an der Mitte)
+</html>
