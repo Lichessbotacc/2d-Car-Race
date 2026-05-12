@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Racing Arena Fixed+</title>
+<title>Racing Arena Fixed + Steering</title>
 
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
@@ -17,16 +17,38 @@ width:260px;color:white;
 }
 
 input,button{
-width:100%;
-margin-top:6px;
-padding:8px;
-border:none;
-border-radius:6px;
+width:100%;margin-top:6px;padding:8px;
+border:none;border-radius:6px;
 }
 
 button{background:#00c27a;color:white;font-weight:bold;}
 
 #score{margin-top:10px;font-size:13px;}
+
+/* ===== LENKRAD ===== */
+#wheel{
+position:absolute;
+right:40px;
+bottom:40px;
+width:140px;
+height:140px;
+border-radius:50%;
+border:4px solid white;
+opacity:0.7;
+touch-action:none;
+}
+
+#indicator{
+position:absolute;
+left:50%;
+top:50%;
+width:6px;
+height:40px;
+background:red;
+transform-origin:bottom center;
+transform:translate(-50%,-100%) rotate(0deg);
+border-radius:3px;
+}
 </style>
 </head>
 
@@ -44,6 +66,10 @@ Runden:
 <button onclick="start()">START</button>
 
 <div id="score"></div>
+</div>
+
+<div id="wheel">
+  <div id="indicator"></div>
 </div>
 
 <canvas id="c"></canvas>
@@ -71,12 +97,32 @@ const track=[
 
 const trackWidth=70;
 
+// ================= PLAYER STEERING =================
+let steer=0;
+
+const wheel=document.getElementById("wheel");
+const indicator=document.getElementById("indicator");
+
+function setSteer(e){
+  const rect=wheel.getBoundingClientRect();
+  const x=e.clientX-rect.left-rect.width/2;
+  const y=e.clientY-rect.top-rect.height/2;
+
+  steer=Math.max(-1,Math.min(1,x/60));
+
+  indicator.style.transform=`translate(-50%,-100%) rotate(${steer*120}deg)`;
+}
+
+wheel.addEventListener("pointerdown",()=>wheel.setPointerCapture(event.pointerId));
+wheel.addEventListener("pointermove",(e)=>{
+  if(e.pressure>0 || e.buttons>0) setSteer(e);
+});
+
 // ================= CAR =================
 class Car{
-  constructor(i,name,isPlayer=false){
+  constructor(i,name){
 
     this.name=name;
-    this.isPlayer=isPlayer;
 
     this.x=track[0].x;
     this.y=track[0].y;
@@ -85,78 +131,60 @@ class Car{
     this.lap=0;
 
     this.angle=0;
+    this.speed=2;
 
-    this.speed=3; // ⚖️ ALLE GLEICH SCHNELL
-
-    this.color=isPlayer?"white":`hsl(${i*50},80%,60%)`;
+    this.color=`hsl(${i*50},80%,60%)`;
 
     this.finished=false;
+
+    this.wander=Math.random()*2-1;
   }
 
   update(){
 
     if(this.finished) return;
 
-    let t=track[this.cp];
+    let target=track[this.cp];
 
-    let dx=t.x-this.x;
-    let dy=t.y-this.y;
+    // 🔥 BOT RANDOMNESS (nicht mehr rail-like)
+    target={
+      x:target.x+(Math.random()-0.5)*40,
+      y:target.y+(Math.random()-0.5)*40
+    };
 
-    let dist=Math.hypot(dx,dy);
+    let dx=target.x-this.x;
+    let dy=target.y-this.y;
 
     let ang=Math.atan2(dy,dx);
 
-    // ================= PLAYER / BOT =================
-    if(this.isPlayer){
-      this.angle += (steerAngle-this.angle)*0.2;
-    } else {
-      this.angle += (ang-this.angle)*0.12;
-    }
+    this.angle += (ang-this.angle)*0.08;
 
-    // ⚖️ FIX: gleiche Geschwindigkeit
-    this.speed = 3;
+    this.speed=2.5+Math.random()*1.2;
 
-    this.x += Math.cos(this.angle)*this.speed;
-    this.y += Math.sin(this.angle)*this.speed;
+    this.x+=Math.cos(this.angle)*this.speed;
+    this.y+=Math.sin(this.angle)*this.speed;
 
-    // ================= TRACK LIMIT =================
-    let center=closest(this.x,this.y);
-    let d=Math.hypot(center.x-this.x,center.y-this.y);
+    let dist=Math.hypot(dx,dy);
 
-    if(d>trackWidth){
-      this.x+=(center.x-this.x)*0.08;
-      this.y+=(center.y-this.y)*0.08;
-    }
-
-    // ================= LAP FIX =================
-    if(dist<75){ // größer = nicht verpassen
+    if(dist<50){
       this.cp++;
-
       if(this.cp>=track.length){
         this.cp=0;
         this.lap++;
-        if(this.lap>=maxLaps)this.finished=true;
+        if(this.lap>=maxLaps) this.finished=true;
       }
     }
 
-    // ================= COLLISION FIX =================
+    // collision
     cars.forEach(o=>{
       if(o===this) return;
-
-      let dx=this.x-o.x;
-      let dy=this.y-o.y;
-      let d=Math.hypot(dx,dy);
-
-      if(d<24 && d>0){
-
-        let nx=dx/d;
-        let ny=dy/d;
-
-        let push=(24-d)/2;
-
+      let d=Math.hypot(o.x-this.x,o.y-this.y);
+      if(d<22){
+        let push=(22-d)/2;
+        let nx=(this.x-o.x)/d;
+        let ny=(this.y-o.y)/d;
         this.x+=nx*push;
         this.y+=ny*push;
-
         o.x-=nx*push;
         o.y-=ny*push;
       }
@@ -164,75 +192,51 @@ class Car{
   }
 
   draw(){
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
 
     ctx.fillStyle=this.color;
-    ctx.beginPath();
-    ctx.arc(this.x,this.y,6,0,Math.PI*2);
-    ctx.fill();
+    ctx.fillRect(-10,-6,20,12);
 
-    ctx.fillStyle="white";
-    ctx.font="12px Arial";
-    ctx.textAlign="center";
-    ctx.fillText(this.name,this.x,this.y-15);
+    ctx.restore();
   }
 }
 
-// ================= STEERING (simple preserved) =================
-let steerAngle=0;
-
-window.addEventListener("mousemove",(e)=>{
-  steerAngle=Math.atan2(
-    e.clientY-cy,
-    e.clientX-cx
-  );
-});
-
-// ================= HELP =================
-function closest(x,y){
-
-  let best=null;
-  let bd=99999;
-
-  for(let i=0;i<track.length;i++){
-
-    let a=track[i];
-    let b=track[(i+1)%track.length];
-
-    let vx=b.x-a.x;
-    let vy=b.y-a.y;
-
-    let wx=x-a.x;
-    let wy=y-a.y;
-
-    let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
-    t=Math.max(0,Math.min(1,t));
-
-    let px=a.x+vx*t;
-    let py=a.y+vy*t;
-
-    let d=Math.hypot(px-x,py-y);
-
-    if(d<bd){
-      bd=d;
-      best={x:px,y:py};
-    }
+// ================= PLAYER CAR =================
+class Player extends Car{
+  constructor(){
+    super(999,"You");
+    this.color="white";
   }
 
-  return best;
+  update(){
+
+    let targetAngle=this.angle+steer*0.08;
+
+    this.angle += (targetAngle-this.angle)*0.2;
+
+    this.speed=3;
+
+    this.x+=Math.cos(this.angle)*this.speed;
+    this.y+=Math.sin(this.angle)*this.speed;
+  }
 }
 
-// ================= GAME =================
 let cars=[];
+let player;
 let maxLaps=5;
 let running=false;
 
+// ================= START =================
 function start(){
 
   cars=[];
   let n=+document.getElementById("bots").value;
   maxLaps=+document.getElementById("laps").value;
 
-  cars.push(new Car(999,"Player",true));
+  player=new Player();
+  cars.push(player);
 
   for(let i=0;i<n;i++){
     cars.push(new Car(i,"Bot "+(i+1)));
@@ -241,27 +245,36 @@ function start(){
   running=true;
 }
 
-// ================= TRACK DRAW =================
+// ================= TRACK =================
 function drawTrack(){
 
-  // Straße
   ctx.strokeStyle="#555";
   ctx.lineWidth=trackWidth*2;
 
   ctx.beginPath();
   ctx.moveTo(track[0].x,track[0].y);
-  track.forEach(p=>ctx.lineTo(p.x,p.y));
+  for(let p of track) ctx.lineTo(p.x,p.y);
   ctx.closePath();
   ctx.stroke();
 
-  // ================= ZIELLINIE (BIG FIX) =================
-  ctx.strokeStyle="yellow";
-  ctx.lineWidth=10;
+  // finish line (START POSITION FIX 🚩)
+  let a=track[track.length-1];
+  let b=track[0];
 
+  ctx.strokeStyle="white";
+  ctx.lineWidth=5;
   ctx.beginPath();
-  ctx.moveTo(track[0].x,track[0].y);
-  ctx.lineTo(track[1].x,track[1].y);
+  ctx.moveTo(b.x-30,b.y-30);
+  ctx.lineTo(b.x+30,b.y+30);
   ctx.stroke();
+
+  // checkpoints
+  ctx.fillStyle="yellow";
+  track.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,6,0,Math.PI*2);
+    ctx.fill();
+  });
 }
 
 // ================= SCORE =================
@@ -285,12 +298,9 @@ function loop(){
 
   drawTrack();
 
-  let done=true;
-
   cars.forEach(c=>{
     if(running)c.update();
     c.draw();
-    if(!c.finished)done=false;
   });
 
   score();
