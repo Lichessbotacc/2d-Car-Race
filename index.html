@@ -69,16 +69,16 @@ class Car{
 
     this.name=name;
 
-    this.x = track[0].x - i * 28;
-    this.y = track[0].y + (i % 2) * 25 - 12;
+    this.x=track[0].x;
+    this.y=track[0].y;
 
     this.cp=1;
     this.lap=0;
 
     this.angle=0;
 
-    this.speed=1000;
-    this.targetSpeed=1000;
+    this.speed=2;
+    this.targetSpeed=2;
 
     this.color=`hsl(${i*50},80%,60%)`;
 
