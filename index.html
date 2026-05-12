@@ -69,7 +69,7 @@ Spielername:
 <div id="menu">
   <h2>🏁 Racing Arena</h2>
 
-  <button onclick="showSettings()">▶ Start Game</button>
+  <button onclick="showSettings(); startRace()">▶ Start Game</button>
   <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
 </div>
@@ -910,6 +910,7 @@ playerItem=null;
 
 document.getElementById("itemDisplay")
 .innerText = "";
+loop();
 
 </script>
 
