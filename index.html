@@ -159,18 +159,39 @@ class Car{
 
   draw(){
 
-    ctx.save();
-    ctx.translate(this.x,this.y);
-    ctx.rotate(this.angle);
+  ctx.save();
+  ctx.translate(this.x,this.y);
+  ctx.rotate(this.angle);
 
-    ctx.fillStyle=this.color;
-    ctx.fillRect(-10,-6,20,12);
+  // Auto
+  ctx.fillStyle=this.color;
+  ctx.fillRect(-10,-6,20,12);
 
-    ctx.fillStyle="#111";
-    ctx.fillRect(-4,-3,8,6);
+  ctx.fillStyle="#111";
+  ctx.fillRect(-4,-3,8,6);
 
-    ctx.restore();
-  }
+  ctx.restore();
+
+  // 👇 NAME ÜBER DEM AUTO
+  ctx.fillStyle="white";
+  ctx.font="12px Arial";
+  ctx.textAlign="center";
+
+  ctx.fillText(
+    this.name,
+    this.x,
+    this.y - 18
+  );
+
+  // optional: Runde anzeigen
+  ctx.fillStyle="rgba(255,255,255,0.7)";
+  ctx.font="10px Arial";
+
+  ctx.fillText(
+    "Lap " + this.lap,
+    this.x,
+    this.y - 6
+  );
 }
 
 // ================= TRACK HELP =================
