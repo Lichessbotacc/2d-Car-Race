@@ -63,7 +63,9 @@ const trackWidth=70;
 
 // ================= CAR =================
 class Car{
-  constructor(i,name){
+  constructor(i,name,skill=1){
+
+  this.skill = skill;
 
     this.name=name;
 
@@ -92,7 +94,10 @@ class Car{
 
     if(this.finished) return;
 
-    this.speed += (this.targetSpeed-this.speed)*0.05;
+    let skillFactor = this.skill;
+
+    // bessere Bots sind stabiler
+    this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
 
     let t=track[this.cp];
 
@@ -103,7 +108,12 @@ class Car{
 
     let ang=Math.atan2(dy,dx);
 
-    this.angle += (ang-this.angle)*0.12;
+    let turnSpeed = 0.05 + this.skill * 0.1;
+
+    let diff = ang - this.angle;
+    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+
+    this.angle += diff * turnSpeed;
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
@@ -227,7 +237,12 @@ function start(){
   maxLaps=+document.getElementById("laps").value;
 
   for(let i=0;i<n;i++){
-    cars.push(new Car(i,"Bot "+(i+1)));
+
+    // Skill verteilt: erste besser, letzte schlechter
+    let skill = 1 - (i / Math.max(1,n-1));  
+    skill = 0.3 + skill * 0.7;
+
+    cars.push(new Car(i,"Bot "+(i+1),skill));
   }
 
   running=true;
