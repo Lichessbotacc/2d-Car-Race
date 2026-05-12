@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racing Arena Fixed</title>
+
+<style>
+body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
+canvas{display:block;}
+#ui{
+position:absolute;top:10px;left:10px;
+background:rgba(0,0,0,0.75);
+padding:12px;border-radius:10px;
+width:260px;color:white;
+}
+input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
+button{background:#00c27a;color:white;font-weight:bold;}
+#score{margin-top:10px;font-size:13px;}
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+<h3>🏁 Racing Arena</h3>
+
+Bots:
+<input id="bots" type="number" value="6">
+
+Runden:
+<input id="laps" type="number" value="5">
+
+<button onclick="start()">START</button>
+
+<div id="score"></div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+
+const c=document.getElementById("c");
+const ctx=c.getContext("2d");
+
+c.width=innerWidth;
+c.height=innerHeight;
+
+const cx=c.width/2;
+const cy=c.height/2;
+
+// ================= TRACK (mehrere Checkpoints!) =================
+const track=[
+  {x:cx+300,y:cy},
+  {x:cx+200,y:cy-200},
+  {x:cx-100,y:cy-220},
+  {x:cx-300,y:cy-50},
+  {x:cx-200,y:cy+200},
+  {x:cx+100,y:cy+220}
+];
+
+const trackWidth=70;
+
+// ================= CAR =================
+class Car{
+  constructor(i,name){
+
+    this.name=name;
+
+    this.x=track[0].x;
+    this.y=track[0].y;
+
+    this.cp=1;
+    this.lap=0;
+
+    this.angle=0;
+
+    this.speed=2;
+    this.targetSpeed=2;
+
+    this.color=`hsl(${i*50},80%,60%)`;
+
+    this.finished=false;
+    this.points=0;
+
+    setInterval(()=>{
+      this.targetSpeed=1+Math.random()*3;
+    },1000);
+  }
+
+  update(){
+
+    if(this.finished) return;
+
+    this.speed += (this.targetSpeed-this.speed)*0.05;
+
+    let t=track[this.cp];
+
+    let dx=t.x-this.x;
+    let dy=t.y-this.y;
+
+    let dist=Math.hypot(dx,dy);
+
+    let ang=Math.atan2(dy,dx);
+
+    this.angle += (ang-this.angle)*0.12;
+
+    this.x += Math.cos(this.angle)*this.speed;
+    this.y += Math.sin(this.angle)*this.speed;
+
+    // Strecke erzwingen
+    let center=closest(this.x,this.y);
+
+    let d=Math.hypot(center.x-this.x,center.y-this.y);
+
+    if(d>trackWidth){
+      this.x += (center.x-this.x)*0.08;
+      this.y += (center.y-this.y)*0.08;
+      this.speed*=0.9;
+    }
+
+    // checkpoint FIX (kein Bug mehr!)
+    if(dist<50){
+      this.cp++;
+
+      if(this.cp>=track.length){
+        this.cp=0;
+        this.lap++;
+
+        if(this.lap>=maxLaps){
+          this.finished=true;
+        }
+      }
+    }
+
+    // collision
+    cars.forEach(o=>{
+      if(o===this) return;
+
+      let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+      if(d<22){
+
+        let push=(22-d)/2;
+
+        let nx=(this.x-o.x)/d;
+        let ny=(this.y-o.y)/d;
+
+        this.x+=nx*push;
+        this.y+=ny*push;
+
+        o.x-=nx*push;
+        o.y-=ny*push;
+
+        this.speed*=0.9;
+      }
+    });
+  }
+
+  draw(){
+
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
+
+    ctx.fillStyle=this.color;
+    ctx.fillRect(-10,-6,20,12);
+
+    ctx.fillStyle="#111";
+    ctx.fillRect(-4,-3,8,6);
+
+    ctx.restore();
+  }
+}
+
+// ================= TRACK HELP =================
+function closest(x,y){
+
+  let best=null;
+  let bd=99999;
+
+  for(let i=0;i<track.length;i++){
+
+    let a=track[i];
+    let b=track[(i+1)%track.length];
+
+    let p=project(x,y,a,b);
+
+    let d=Math.hypot(p.x-x,p.y-y);
+
+    if(d<bd){
+      bd=d;
+      best=p;
+    }
+  }
+
+  return best;
+}
+
+function project(px,py,a,b){
+
+  let vx=b.x-a.x;
+  let vy=b.y-a.y;
+
+  let wx=px-a.x;
+  let wy=py-a.y;
+
+  let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
+
+  t=Math.max(0,Math.min(1,t));
+
+  return{
+    x:a.x+vx*t,
+    y:a.y+vy*t
+  };
+}
+
+// ================= GAME =================
+let cars=[];
+let maxLaps=5;
+let running=false;
+
+function start(){
+
+  cars=[];
+  let n=+document.getElementById("bots").value;
+  maxLaps=+document.getElementById("laps").value;
+
+  for(let i=0;i<n;i++){
+    cars.push(new Car(i,"Bot "+(i+1)));
+  }
+
+  running=true;
+}
+
+// ================= DRAW TRACK =================
+function drawTrack(){
+
+  ctx.strokeStyle="#555";
+  ctx.lineWidth=trackWidth*2;
+
+  ctx.beginPath();
+  ctx.moveTo(track[0].x,track[0].y);
+
+  for(let p of track){
+    ctx.lineTo(p.x,p.y);
+  }
+
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.strokeStyle="white";
+  ctx.lineWidth=2;
+  ctx.setLineDash([10,10]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // checkpoints sichtbar
+  ctx.fillStyle="yellow";
+  track.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,6,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+
+// ================= SCORE (FIXED!) =================
+function score(){
+
+  let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
+
+  let html="<h3>🏆 Ranking</h3>";
+
+  sorted.forEach((c,i)=>{
+    html+=`${i+1}. ${c.name} | Lap ${c.lap}<br>`;
+  });
+
+  document.getElementById("score").innerHTML=html;
+}
+
+// ================= LOOP =================
+function loop(){
+
+  ctx.clearRect(0,0,c.width,c.height);
+
+  drawTrack();
+
+  let done=true;
+
+  cars.forEach(c=>{
+    if(running)c.update();
+    c.draw();
+    if(!c.finished)done=false;
+  });
+
+  if(running && done){
+    running=false;
+
+    cars.forEach((c,i)=>{
+      c.points += [10,7,5,3,1][i] || 1;
+    });
+  }
+
+  score();
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+
+</script>
+
+</body>
+</html>   Bau es in diesem code ein
