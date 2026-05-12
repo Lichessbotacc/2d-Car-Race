@@ -31,7 +31,7 @@ Bots:
 Runden:
 <input id="laps" type="number" value="5">
 
-<button onclick="start()">START</button>
+<button onclick="startRace()">START</button>
 
 <div id="score"></div>
 </div>
@@ -84,6 +84,7 @@ class Car{
 
     this.finished=false;
     this.points=0;
+    this.spin = 0;
 
     setInterval(()=>{
       this.targetSpeed=1+Math.random()*3;
@@ -179,8 +180,8 @@ class Car{
 
         let push=(22-d)/2;
 
-        let nx=(this.x-o.x)/d;
-        let ny=(this.y-o.y)/d;
+        let nx=(this.x-o.x)/(d||1);
+        let ny=(this.y-o.y)/(d||1);
 
         this.x+=nx*push;
         this.y+=ny*push;
@@ -347,6 +348,37 @@ function loop(){
   score();
 
   requestAnimationFrame(loop);
+}
+
+function countdown(cb){
+
+  let el=document.createElement("div");
+  el.style.position="absolute";
+  el.style.top="50%";
+  el.style.left="50%";
+  el.style.transform="translate(-50%,-50%)";
+  el.style.fontSize="80px";
+  el.style.color="white";
+  document.body.appendChild(el);
+
+  let n=3;
+
+  let int=setInterval(()=>{
+
+    if(n===0){
+      el.innerText="GO!";
+      setTimeout(()=>{
+        el.remove();
+        clearInterval(int);
+        cb();
+      },800);
+      return;
+    }
+
+    el.innerText=n;
+    n--;
+
+  },1000);
 }
 
 loop();
