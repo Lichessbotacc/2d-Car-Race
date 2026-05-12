@@ -78,7 +78,7 @@ class Car{
     this.angle=0;
 
     this.speed=2;
-    this.targetSpeed=2;
+    
 
     this.color=`hsl(${i*50},80%,60%)`;
 
@@ -86,9 +86,6 @@ class Car{
     this.points=0;
     this.spin = 0;
 
-    setInterval(()=>{
-      this.targetSpeed=1+Math.random()*3;
-    },1000);
   }
 
   update(){
@@ -103,12 +100,11 @@ class Car{
 
     if(this.spin>0){
       this.angle+=0.3;
-      this.speed*=0.4;
       this.spin-=0.02;
     }
 
     // bessere Bots sind stabiler
-    this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
+    this.speed = 2.8; // immer konstant
 
     let error=(1-this.skill)*40;
 
