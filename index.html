@@ -227,18 +227,22 @@ class Car{
           this.item=null;
         }
 
-       if(this.item==="spin"){
+                 if(this.item==="spin"){
 
-          cars.forEach(o=>{
+            cars.forEach(o=>{
 
-            if(o===this) return;
+              if(o===this) return;
 
-            let d=Math.hypot(o.x-this.x,o.y-this.y);
+              let d=Math.hypot(o.x-this.x,o.y-this.y);
 
-            if(d<100){
-              o.spin=1;
-            }
-          });
+              if(d<80){
+
+                o.spin=1;
+              }
+            });
+
+            this.item=null;
+          }
         }
 
         this.item=null;
