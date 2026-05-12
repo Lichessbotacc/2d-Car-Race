@@ -422,20 +422,23 @@ class ItemBox{
 
 function giveItem(car){
 
- 
   const pool=[
-  "boost",
-  "spin",
-  "banana",
-  "rocket",
-  "explosion
-];
+    "boost",
+    "spin",
+    "banana",
+    "rocket"
+    "explosion"
+  ];
 
   car.item=
   pool[Math.floor(Math.random()*pool.length)];
 
   if(car.isPlayer){
+
     playerItem=car.item;
+
+    document.getElementById("itemDisplay")
+    .innerText = "🎁 Item: " + playerItem;
   }
 }
 c.addEventListener("touchstart", e=>{
@@ -902,10 +905,11 @@ document
   });
 }
 
-  player.item=null;
-  playerItem=null;
-};
+player.item=null;
+playerItem=null;
 
+document.getElementById("itemDisplay")
+.innerText = "";
 loop();
 
 </script>
