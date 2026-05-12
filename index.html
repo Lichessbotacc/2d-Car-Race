@@ -87,8 +87,13 @@ const ctx=c.getContext("2d");
 let menu = document.getElementById("menu");
 let ui = document.getElementById("ui");
 
-c.width=innerWidth;
-c.height=innerHeight;
+function resize(){
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener("resize", resize);
 
 const cx=c.width/2;
 const cy=c.height/2;
