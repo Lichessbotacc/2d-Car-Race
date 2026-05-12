@@ -144,32 +144,26 @@ if(this.finished) return;
 
 if(this.isPlayer){
 
-if(!touchTarget){
-touchTarget = {x:this.x,y:this.y};
-}
+  if(!touchTarget){
+    touchTarget = {x:this.x, y:this.y};
+  }
 
-let dx = touchTarget.x - this.x;
-let dy = touchTarget.y - this.y;
+  let dx = touchTarget.x - this.x;
+  let dy = touchTarget.y - this.y;
 
-let angle = Math.atan2(dy,dx);
+  let angle = Math.atan2(dy, dx);
 
-let diff = angle - this.angle;
-diff = Math.atan2(Math.sin(diff),Math.cos(diff));
+  let diff = angle - this.angle;
+  diff = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-this.angle += diff * 0.12;
+  this.angle += diff * 0.12;
 
-this.speed += (this.targetSpeed - this.speed) * 0.05;
+  this.speed += (this.targetSpeed - this.speed) * 0.05;
 
-this.x += Math.cos(this.angle)*this.speed;
-this.y += Math.sin(this.angle)*this.speed;
+  this.x += Math.cos(this.angle) * this.speed;
+  this.y += Math.sin(this.angle) * this.speed;
 
-let center = closest(this.x,this.y);
-let d = Math.hypot(center.x-this.x,center.y-this.y);
-
-if(d > trackWidth){
-this.x += (center.x-this.x)*0.08;
-this.y += (center.y-this.y)*0.08;
-this.speed *= 0.9;
+  return;
 }
 
 let target = track[this.cp];
@@ -335,12 +329,22 @@ ctx.clearRect(0,0,c.width,c.height);
 
 drawTrack();
 
+items.forEach(i=>{
+  i.update();
+  i.draw();
+
+  cars.forEach(c=>{
+    i.check(c);
+  });
+});
+
 cars.forEach(c=>{
 if(running)c.update();
 c.draw();
 });
 
 requestAnimationFrame(loop);
+  score();
 }
 
 function countdown(cb){
