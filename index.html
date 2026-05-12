@@ -69,8 +69,8 @@ class Car{
 
     this.name=name;
 
-    this.x=track[0].x;
-    this.y=track[0].y;
+    this.x = track[0].x - i * 28;
+    this.y = track[0].y + (i % 2) * 25 - 12;
 
     this.cp=1;
     this.lap=0;
