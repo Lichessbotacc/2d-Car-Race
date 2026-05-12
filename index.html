@@ -8,30 +8,44 @@
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
 canvas{display:block;}
+
 #ui{
 position:absolute;top:10px;left:10px;
 background:rgba(0,0,0,0.75);
 padding:12px;border-radius:10px;
 width:260px;color:white;
 }
-input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
+
+input,button{
+width:100%;
+margin-top:6px;
+padding:8px;
+border:none;
+border-radius:6px;
+}
+
 button{background:#00c27a;color:white;font-weight:bold;}
+
 #score{margin-top:10px;font-size:13px;}
 
 /* STEERING WHEEL */
 #wheel{
-width:120px;height:120px;
+width:120px;
+height:120px;
 margin:10px auto;
 border-radius:50%;
 border:3px solid white;
 position:relative;
 touch-action:none;
 }
+
 #needle{
 position:absolute;
-width:4px;height:50px;
+width:4px;
+height:50px;
 background:red;
-top:10px;left:50%;
+top:10px;
+left:50%;
 transform-origin:bottom center;
 transform:rotate(0rad);
 }
@@ -86,7 +100,7 @@ const track=[
 
 const trackWidth=70;
 
-// ================= STEERING =================
+// ================= STEERING (iPad FIX) =================
 let steerAngle=0;
 let steerPower=0;
 
@@ -95,20 +109,52 @@ const needle=document.getElementById("needle");
 
 let dragging=false;
 
-wheel.addEventListener("mousedown",()=>dragging=true);
-window.addEventListener("mouseup",()=>dragging=false);
-
-window.addEventListener("mousemove",(e)=>{
-  if(!dragging) return;
-
+function getPos(e){
   let r=wheel.getBoundingClientRect();
-  let x=e.clientX-(r.left+60);
-  let y=e.clientY-(r.top+60);
 
-  steerAngle=Math.atan2(y,x);
-  steerPower=Math.min(1,Math.hypot(x,y)/60);
+  let x,y;
+
+  if(e.touches){
+    x=e.touches[0].clientX-(r.left+60);
+    y=e.touches[0].clientY-(r.top+60);
+  } else {
+    x=e.clientX-(r.left+60);
+    y=e.clientY-(r.top+60);
+  }
+
+  return {x,y};
+}
+
+function updateSteer(e){
+  let p=getPos(e);
+
+  steerAngle=Math.atan2(p.y,p.x);
+  steerPower=Math.min(1,Math.hypot(p.x,p.y)/60);
 
   needle.style.transform=`rotate(${steerAngle}rad)`;
+}
+
+// Mouse
+wheel.addEventListener("mousedown",()=>dragging=true);
+window.addEventListener("mouseup",()=>dragging=false);
+window.addEventListener("mousemove",(e)=>{
+  if(!dragging) return;
+  updateSteer(e);
+});
+
+// Touch (iPad FIX)
+wheel.addEventListener("touchstart",(e)=>{
+  dragging=true;
+  updateSteer(e);
+});
+
+wheel.addEventListener("touchmove",(e)=>{
+  if(!dragging) return;
+  updateSteer(e);
+});
+
+wheel.addEventListener("touchend",()=>{
+  dragging=false;
 });
 
 // ================= CAR =================
@@ -165,7 +211,7 @@ class Car{
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
 
-    // track clamp
+    // Track Begrenzung
     let center=closest(this.x,this.y);
     let d=Math.hypot(center.x-this.x,center.y-this.y);
 
@@ -175,7 +221,7 @@ class Car{
       this.speed*=0.9;
     }
 
-    // checkpoint
+    // Checkpoint
     if(dist<50){
       this.cp++;
       if(this.cp>=track.length){
@@ -197,7 +243,7 @@ class Car{
 
     ctx.restore();
 
-    // NAME FIX
+    // NAME
     ctx.fillStyle="white";
     ctx.font="12px Arial";
     ctx.textAlign="center";
@@ -216,32 +262,28 @@ function closest(x,y){
     let a=track[i];
     let b=track[(i+1)%track.length];
 
-    let p=project(x,y,a,b);
+    let vx=b.x-a.x;
+    let vy=b.y-a.y;
 
-    let d=Math.hypot(p.x-x,p.y-y);
+    let wx=x-a.x;
+    let wy=y-a.y;
+
+    let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
+
+    t=Math.max(0,Math.min(1,t));
+
+    let px=a.x+vx*t;
+    let py=a.y+vy*t;
+
+    let d=Math.hypot(px-x,py-y);
 
     if(d<bd){
       bd=d;
-      best=p;
+      best={x:px,y:py};
     }
   }
 
   return best;
-}
-
-function project(px,py,a,b){
-
-  let vx=b.x-a.x;
-  let vy=b.y-a.y;
-
-  let wx=px-a.x;
-  let wy=py-a.y;
-
-  let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
-
-  t=Math.max(0,Math.min(1,t));
-
-  return{x:a.x+vx*t,y:a.y+vy*t};
 }
 
 // ================= GAME =================
