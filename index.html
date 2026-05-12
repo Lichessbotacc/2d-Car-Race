@@ -657,20 +657,21 @@ new Car(i,"Bot "+i,0.65)
 
 }
 
-items = [];
+items=[];
 
-if(itemsEnabled){
-  for(let i=0;i<8;i++){
+for(let i=0;i<8;i++){
 
-    let p = track[Math.floor(Math.random()*track.length)];
+  let p=
+  track[Math.floor(Math.random()*track.length)];
 
-    items.push(
-      new ItemBox(
-        p.x + (Math.random()-0.5)*120,
-        p.y + (Math.random()-0.5)*120
-      )
-    );
-  }
+  items.push(
+
+    new ItemBox(
+
+      p.x+(Math.random()-0.5)*120,
+      p.y+(Math.random()-0.5)*120
+    )
+  );
 }
 
 running=false;
