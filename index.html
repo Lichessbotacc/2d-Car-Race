@@ -175,7 +175,9 @@ class Car{
 
     if(this.isPlayer){
 
-    if(!touchTarget) return; // ← WICHTIGER FIX
+      if(!touchTarget){
+        touchTarget = {x:this.x, y:this.y};
+      }
 
         let dx = touchTarget.x - this.x;
         let dy = touchTarget.y - this.y;
