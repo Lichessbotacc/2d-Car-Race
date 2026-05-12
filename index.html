@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -9,47 +8,15 @@
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
 canvas{display:block;}
-
 #ui{
 position:absolute;top:10px;left:10px;
 background:rgba(0,0,0,0.75);
 padding:12px;border-radius:10px;
 width:260px;color:white;
 }
-
-input,button{
-width:100%;margin-top:6px;padding:8px;
-border:none;border-radius:6px;
-}
-
+input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
-
 #score{margin-top:10px;font-size:13px;}
-
-/* LENKRAD */
-#wheel{
-position:absolute;
-right:40px;
-bottom:40px;
-width:140px;
-height:140px;
-border-radius:50%;
-border:4px solid white;
-opacity:0.7;
-touch-action:none;
-}
-
-#indicator{
-position:absolute;
-left:50%;
-top:50%;
-width:6px;
-height:40px;
-background:red;
-transform-origin:bottom center;
-transform:translate(-50%,-100%);
-border-radius:3px;
-}
 </style>
 </head>
 
@@ -69,10 +36,6 @@ Runden:
 <div id="score"></div>
 </div>
 
-<div id="wheel">
-  <div id="indicator"></div>
-</div>
-
 <canvas id="c"></canvas>
 
 <script>
@@ -86,7 +49,7 @@ c.height=innerHeight;
 const cx=c.width/2;
 const cy=c.height/2;
 
-// ================= TRACK =================
+// ================= TRACK (mehrere Checkpoints!) =================
 const track=[
   {x:cx+300,y:cy},
   {x:cx+200,y:cy-200},
@@ -98,37 +61,116 @@ const track=[
 
 const trackWidth=70;
 
-// ================= LENKRAD =================
-let steer=0;
-let dragging=false;
+// ================= CAR =================
+class Car{
+  constructor(i,name){
 
-const wheel=document.getElementById("wheel");
-const indicator=document.getElementById("indicator");
+    this.name=name;
 
-wheel.addEventListener("pointerdown",(e)=>{
-  dragging=true;
-  wheel.setPointerCapture(e.pointerId);
-  updateSteer(e);
-});
+    this.x=track[0].x;
+    this.y=track[0].y;
 
-wheel.addEventListener("pointerup",()=>{
-  dragging=false;
-  steer*=0.2;
-});
+    this.cp=1;
+    this.lap=0;
 
-wheel.addEventListener("pointermove",(e)=>{
-  if(!dragging) return;
-  updateSteer(e);
-});
+    this.angle=0;
 
-function updateSteer(e){
-  const rect=wheel.getBoundingClientRect();
-  const x=e.clientX-rect.left-rect.width/2;
+    this.speed=2;
+    this.targetSpeed=2;
 
-  steer=Math.max(-1,Math.min(1,x/60));
+    this.color=`hsl(${i*50},80%,60%)`;
 
-  indicator.style.transform=
-    `translate(-50%,-100%) rotate(${steer*120}deg)`;
+    this.finished=false;
+    this.points=0;
+
+    setInterval(()=>{
+      this.targetSpeed=1+Math.random()*3;
+    },1000);
+  }
+
+  update(){
+
+    if(this.finished) return;
+
+    this.speed += (this.targetSpeed-this.speed)*0.05;
+
+    let t=track[this.cp];
+
+    let dx=t.x-this.x;
+    let dy=t.y-this.y;
+
+    let dist=Math.hypot(dx,dy);
+
+    let ang=Math.atan2(dy,dx);
+
+    this.angle += (ang-this.angle)*0.12;
+
+    this.x += Math.cos(this.angle)*this.speed;
+    this.y += Math.sin(this.angle)*this.speed;
+
+    // Strecke erzwingen
+    let center=closest(this.x,this.y);
+
+    let d=Math.hypot(center.x-this.x,center.y-this.y);
+
+    if(d>trackWidth){
+      this.x += (center.x-this.x)*0.08;
+      this.y += (center.y-this.y)*0.08;
+      this.speed*=0.9;
+    }
+
+    // checkpoint FIX (kein Bug mehr!)
+    if(dist<50){
+      this.cp++;
+
+      if(this.cp>=track.length){
+        this.cp=0;
+        this.lap++;
+
+        if(this.lap>=maxLaps){
+          this.finished=true;
+        }
+      }
+    }
+
+    // collision
+    cars.forEach(o=>{
+      if(o===this) return;
+
+      let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+      if(d<22){
+
+        let push=(22-d)/2;
+
+        let nx=(this.x-o.x)/d;
+        let ny=(this.y-o.y)/d;
+
+        this.x+=nx*push;
+        this.y+=ny*push;
+
+        o.x-=nx*push;
+        o.y-=ny*push;
+
+        this.speed*=0.9;
+      }
+    });
+  }
+
+  draw(){
+
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
+
+    ctx.fillStyle=this.color;
+    ctx.fillRect(-10,-6,20,12);
+
+    ctx.fillStyle="#111";
+    ctx.fillRect(-4,-3,8,6);
+
+    ctx.restore();
+  }
 }
 
 // ================= TRACK HELP =================
@@ -173,132 +215,16 @@ function project(px,py,a,b){
   };
 }
 
-// ================= PHYSICS =================
-function keepOnTrack(car){
-
-  let center=closest(car.x,car.y);
-
-  let dx=center.x-car.x;
-  let dy=center.y-car.y;
-
-  let dist=Math.hypot(dx,dy);
-
-  if(dist>trackWidth){
-    car.x+=dx*0.08;
-    car.y+=dy*0.08;
-    car.speed*=0.92;
-  }
-}
-
-// ================= CAR =================
-class Car{
-
-  constructor(i,name){
-    this.name=name;
-    this.x=track[0].x;
-    this.y=track[0].y;
-
-    this.cp=1;
-    this.lap=0;
-
-    this.angle=0;
-    this.speed=2;
-
-    this.color=`hsl(${i*50},80%,60%)`;
-
-    this.finished=false;
-  }
-
-  update(){
-
-    if(this.finished) return;
-
-    let target=track[this.cp];
-
-    // leichte Randomness für Bots
-    target={
-      x:target.x+(Math.random()-0.5)*35,
-      y:target.y+(Math.random()-0.5)*35
-    };
-
-    let dx=target.x-this.x;
-    let dy=target.y-this.y;
-
-    let ang=Math.atan2(dy,dx);
-
-    let diff=ang-this.angle;
-    diff=Math.atan2(Math.sin(diff),Math.cos(diff));
-
-    this.angle+=diff*0.05;
-
-    this.speed=2.8;
-
-    this.x+=Math.cos(this.angle)*this.speed;
-    this.y+=Math.sin(this.angle)*this.speed;
-
-    keepOnTrack(this);
-
-    let dist=Math.hypot(dx,dy);
-
-    if(dist<50){
-      this.cp++;
-      if(this.cp>=track.length){
-        this.cp=0;
-        this.lap++;
-        if(this.lap>=maxLaps) this.finished=true;
-      }
-    }
-  }
-
-  draw(){
-    ctx.save();
-    ctx.translate(this.x,this.y);
-    ctx.rotate(this.angle);
-
-    ctx.fillStyle=this.color;
-    ctx.fillRect(-10,-6,20,12);
-
-    ctx.restore();
-  }
-}
-
-// ================= PLAYER =================
-class Player extends Car{
-
-  constructor(){
-    super(999,"You");
-    this.color="white";
-  }
-
-  update(){
-
-    let targetAngle=this.angle+steer*0.1;
-
-    this.angle+= (targetAngle-this.angle)*0.2;
-
-    this.speed=3;
-
-    this.x+=Math.cos(this.angle)*this.speed;
-    this.y+=Math.sin(this.angle)*this.speed;
-
-    keepOnTrack(this);
-  }
-}
-
+// ================= GAME =================
 let cars=[];
-let player;
 let maxLaps=5;
 let running=false;
 
-// ================= START =================
 function start(){
 
   cars=[];
   let n=+document.getElementById("bots").value;
   maxLaps=+document.getElementById("laps").value;
-
-  player=new Player();
-  cars.push(player);
 
   for(let i=0;i<n;i++){
     cars.push(new Car(i,"Bot "+(i+1)));
@@ -307,7 +233,7 @@ function start(){
   running=true;
 }
 
-// ================= TRACK DRAW =================
+// ================= DRAW TRACK =================
 function drawTrack(){
 
   ctx.strokeStyle="#555";
@@ -316,23 +242,20 @@ function drawTrack(){
   ctx.beginPath();
   ctx.moveTo(track[0].x,track[0].y);
 
-  for(let p of track) ctx.lineTo(p.x,p.y);
+  for(let p of track){
+    ctx.lineTo(p.x,p.y);
+  }
 
   ctx.closePath();
   ctx.stroke();
 
-  // Ziellinie (fix am Startpunkt)
-  let start=track[0];
-
   ctx.strokeStyle="white";
-  ctx.lineWidth=5;
-
-  ctx.beginPath();
-  ctx.moveTo(start.x-25,start.y-25);
-  ctx.lineTo(start.x+25,start.y+25);
+  ctx.lineWidth=2;
+  ctx.setLineDash([10,10]);
   ctx.stroke();
+  ctx.setLineDash([]);
 
-  // checkpoints
+  // checkpoints sichtbar
   ctx.fillStyle="yellow";
   track.forEach(p=>{
     ctx.beginPath();
@@ -341,7 +264,7 @@ function drawTrack(){
   });
 }
 
-// ================= SCORE =================
+// ================= SCORE (FIXED!) =================
 function score(){
 
   let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
@@ -362,10 +285,21 @@ function loop(){
 
   drawTrack();
 
+  let done=true;
+
   cars.forEach(c=>{
     if(running)c.update();
     c.draw();
+    if(!c.finished)done=false;
   });
+
+  if(running && done){
+    running=false;
+
+    cars.forEach((c,i)=>{
+      c.points += [10,7,5,3,1][i] || 1;
+    });
+  }
 
   score();
 
@@ -377,4 +311,4 @@ loop();
 </script>
 
 </body>
-</html>
+</html>   Bau es in diesem code ein
