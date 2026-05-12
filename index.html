@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D Racing Arena</title>
+
+<style>
+body{
+    margin:0;
+    background:#1e1e1e;
+    color:white;
+    font-family:Arial;
+    overflow:hidden;
+}
+
+#topbar{
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:10;
+    background:#2b2b2b;
+    padding:12px;
+    border-radius:10px;
+    width:260px;
+}
+
+input, button{
+    width:100%;
+    margin-top:6px;
+    padding:8px;
+    border:none;
+    border-radius:6px;
+    font-size:14px;
+}
+
+button{
+    background:#00b894;
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    background:#00d1a7;
+}
+
+#scoreboard{
+    margin-top:10px;
+    font-size:14px;
+    max-height:300px;
+    overflow:auto;
+}
+
+canvas{
+    display:block;
+    background:#3f3f3f;
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+    <h2>🏁 Racing Arena</h2>
+
+    Bots:
+    <input type="number" id="botCount" value="6" min="2" max="20">
+
+    Runden:
+    <input type="number" id="laps" value="5" min="1" max="50">
+
+    <button onclick="startRace()">Rennen starten</button>
+
+    <div id="scoreboard"></div>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+
+const trackRadiusX = 300;
+const trackRadiusY = 180;
+
+let racers = [];
+let raceRunning = false;
+let totalLaps = 5;
+
+class Racer{
+    constructor(name,color){
+        this.name = name;
+        this.color = color;
+
+        this.angle = Math.random() * Math.PI * 2;
+
+        this.speed = 0.01 + Math.random() * 0.01;
+
+        this.laps = 0;
+        this.finished = false;
+        this.points = 0;
+
+        this.lastY = 0;
+    }
+
+    update(){
+
+        if(this.finished) return;
+
+        this.angle += this.speed;
+
+        let y = Math.sin(this.angle);
+
+        // Runde erkannt
+        if(this.lastY < 0 && y >= 0 && Math.cos(this.angle) > 0){
+            this.laps++;
+
+            if(this.laps >= totalLaps){
+                this.finished = true;
+            }
+        }
+
+        this.lastY = y;
+    }
+
+    draw(){
+
+        let x = centerX + Math.cos(this.angle) * trackRadiusX;
+        let y = centerY + Math.sin(this.angle) * trackRadiusY;
+
+        ctx.fillStyle = this.color;
+
+        ctx.fillRect(x - 10, y - 10, 20, 20);
+
+        ctx.fillStyle = "white";
+        ctx.font = "12px Arial";
+        ctx.fillText(this.name, x - 15, y - 15);
+    }
+}
+
+function drawTrack(){
+
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, trackRadiusX, trackRadiusY, 0, 0, Math.PI * 2);
+    ctx.lineWidth = 80;
+    ctx.strokeStyle = "#555";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, trackRadiusX, trackRadiusY, 0, 0, Math.PI * 2);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "white";
+    ctx.setLineDash([15,15]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Startlinie
+    ctx.beginPath();
+    ctx.moveTo(centerX + trackRadiusX, centerY - 50);
+    ctx.lineTo(centerX + trackRadiusX, centerY + 50);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "yellow";
+    ctx.stroke();
+}
+
+function updateScoreboard(){
+
+    racers.sort((a,b)=>{
+        if(a.laps === b.laps){
+            return b.angle - a.angle;
+        }
+        return b.laps - a.laps;
+    });
+
+    let html = "<h3>🏆 Punkte</h3>";
+
+    racers.forEach((r,i)=>{
+
+        html += `
+        <div>
+        ${i+1}. ${r.name}
+        | Runde ${r.laps}/${totalLaps}
+        | ${r.points} Punkte
+        </div>
+        `;
+    });
+
+    document.getElementById("scoreboard").innerHTML = html;
+}
+
+function finishRace(){
+
+    raceRunning = false;
+
+    let pointsTable = [10,7,5,3,1];
+
+    racers.sort((a,b)=>{
+        if(a.laps === b.laps){
+            return b.angle - a.angle;
+        }
+        return b.laps - a.laps;
+    });
+
+    racers.forEach((r,i)=>{
+        r.points += pointsTable[i] || 0;
+    });
+
+    updateScoreboard();
+
+    setTimeout(()=>{
+        alert("🏁 Rennen beendet!");
+    },100);
+}
+
+function startRace(){
+
+    racers = [];
+
+    totalLaps = parseInt(document.getElementById("laps").value);
+
+    let botCount = parseInt(document.getElementById("botCount").value);
+
+    const colors = [
+        "red",
+        "blue",
+        "green",
+        "orange",
+        "purple",
+        "cyan",
+        "pink",
+        "lime",
+        "gold",
+        "white"
+    ];
+
+    for(let i=0;i<botCount;i++){
+
+        racers.push(
+            new Racer(
+                "Bot " + (i+1),
+                colors[i % colors.length]
+            )
+        );
+    }
+
+    raceRunning = true;
+}
+
+function gameLoop(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    drawTrack();
+
+    let allFinished = true;
+
+    racers.forEach(r=>{
+
+        if(raceRunning){
+            r.update();
+        }
+
+        r.draw();
+
+        if(!r.finished){
+            allFinished = false;
+        }
+    });
+
+    updateScoreboard();
+
+    if(raceRunning && allFinished && racers.length > 0){
+        finishRace();
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
