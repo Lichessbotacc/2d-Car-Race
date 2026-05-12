@@ -262,9 +262,13 @@ class Car{
 
     let error=(1-this.skill)*40;
 
-    let target={
-      x:track[this.cp].x+(Math.random()-0.5)*error,
-      y:track[this.cp].y+(Math.random()-0.5)*error
+    let next = track[this.cp];
+    let after = track[(this.cp + 1) % track.length];
+
+    // Ziel = Mischung aus aktuellem + nächstem Checkpoint
+    let target = {
+      x: next.x * 0.7 + after.x * 0.3,
+      y: next.y * 0.7 + after.y * 0.3
     };
 
     cars.forEach(o=>{
