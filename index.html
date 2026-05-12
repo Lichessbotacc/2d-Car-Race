@@ -8,12 +8,14 @@
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
 canvas{display:block;}
+
 #ui{
 position:absolute;top:10px;left:10px;
 background:rgba(0,0,0,0.75);
 padding:12px;border-radius:10px;
 width:260px;color:white;
 }
+
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
 #score{margin-top:10px;font-size:13px;}
@@ -32,16 +34,8 @@ color:white;
 z-index:10;
 }
 
-#menu h2{
-font-size:40px;
-margin-bottom:20px;
-}
-
-#menu button{
-width:200px;
-margin:8px;
-font-size:16px;
-}
+#menu h2{font-size:40px;margin-bottom:20px;}
+#menu button{width:200px;margin:8px;font-size:16px;}
 </style>
 </head>
 
@@ -67,36 +61,29 @@ Spielername:
 </div>
 
 <div id="menu">
-  <h2>🏁 Racing Arena</h2>
+<h2>🏁 Racing Arena</h2>
 
-  <button onclick="openGame()">▶ Start Game</button>
-  <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
-  <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
+<button onclick="openGame()">▶ Start Game</button>
+<button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
+<button onclick="alert('Settings kommen gleich')">⚙ Settings</button>
 </div>
-  
-<canvas id="c"></canvas>
 
+<canvas id="c"></canvas>
 
 <script>
 
-const c=document.getElementById("c");
-const ctx=c.getContext("2d");
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+
 let menu = document.getElementById("menu");
 let ui = document.getElementById("ui");
 
-function resize(){
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
-}
+let cx, cy;
+let track = [];
+const trackWidth = 70;
 
-resize();
-window.addEventListener("resize", resize);
-
-const cx=c.width/2;
-const cy=c.height/2;
-
-// ================= TRACK (mehrere Checkpoints!) =================
-const track=[
+function buildTrack(){
+track = [
   {x:cx+300,y:cy},
   {x:cx+200,y:cy-200},
   {x:cx-100,y:cy-220},
@@ -104,802 +91,288 @@ const track=[
   {x:cx-200,y:cy+200},
   {x:cx+100,y:cy+220}
 ];
+}
 
-const trackWidth=70;
+function resize(){
+c.width = window.innerWidth;
+c.height = window.innerHeight;
+
+cx = c.width/2;
+cy = c.height/2;
+
+buildTrack();
+}
+
+resize();
+window.addEventListener("resize", resize);
 
 // ================= CAR =================
 class Car{
-  constructor(i,name,skill=1){
-  this.skill = skill;
-  this.name = name;
-  this.item = null; // ← HINZUFÜGEN
+constructor(i,name,skill=1){
 
-    let dx = track[1].x - track[0].x;
-    let dy = track[1].y - track[0].y;
+this.skill = skill;
+this.name = name;
+this.item = null;
 
-    this.angle = Math.atan2(dy, dx);
+let dx = 1, dy = 0;
 
-    this.x =
-    track[0].x
-    - Math.cos(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
-    - Math.cos(this.angle) * i * 35;
+this.angle = 0;
 
-    this.y =
-    track[0].y
-    - Math.sin(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
-    - Math.sin(this.angle) * i * 35;
+this.x = cx;
+this.y = cy;
 
-    this.cp=1;
-    this.lap=0;
+this.cp = 1;
+this.lap = 0;
 
-    this.speed=2;
-    this.targetSpeed=2;
+this.speed = 2;
+this.targetSpeed = 2;
 
-    this.color=`hsl(${i*50},80%,60%)`;
+this.color = `hsl(${i*50},80%,60%)`;
 
-    this.finished=false;
-    this.points=0;
-    this.spin = 0;
-    this.isPlayer = false;
+this.finished = false;
+this.spin = 0;
+this.isPlayer = false;
 
-    setInterval(()=>{
-      this.targetSpeed=1+Math.random()*3;
-    },1000);
-  }
-
-  update(){
-
-    if(this.finished) return;
-    if(this.item==="boost"){
-
-      this.speed+=0.15;
-    }
-
-    if(this.item==="spin"){
-
-      cars.forEach(o=>{
-
-        if(o===this) return;
-
-        let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-        if(d<80){
-
-      o.spin=1;
-        }
-      });
-    }
-
-    if(this.isPlayer){
-
-  if(!touchTarget){
-    touchTarget = {x:this.x, y:this.y};
-  }
-
-  let dx = touchTarget.x - this.x;
-  let dy = touchTarget.y - this.y;
-
-  let angle = Math.atan2(dy, dx);
-
-  let diff = angle - this.angle;
-  diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-
-  this.angle += diff * 0.12;
-
-  this.speed += (this.targetSpeed - this.speed) * 0.05;
-
-  this.x += Math.cos(this.angle) * this.speed;
-  this.y += Math.sin(this.angle) * this.speed;
-
-  return;
+setInterval(()=>{
+this.targetSpeed = 1 + Math.random()*3;
+},1000);
 }
 
-      this.speed += (this.targetSpeed - this.speed) * 0.05;
+update(){
 
-      this.x += Math.cos(this.angle) * this.speed;
-      this.y += Math.sin(this.angle) * this.speed;
+if(this.finished) return;
 
-      let center = closest(this.x,this.y);
+if(this.isPlayer){
 
-      let d = Math.hypot(center.x-this.x, center.y-this.y);
-
-      if(d > trackWidth){
-        this.x += (center.x-this.x)*0.08;
-        this.y += (center.y-this.y)*0.08;
-        this.speed *= 0.9;
-      }
-
-      let target = track[this.cp];
-
-      let dist = Math.hypot(
-        target.x - this.x,
-        target.y - this.y
-      );
-
-      if(dist < 50){
-
-        this.cp++;
-
-        if(this.cp >= track.length){
-          this.cp = 0;
-          this.lap++;
-
-          if(this.lap >= maxLaps){
-            this.finished = true;
-          }
-        }
-      }
-
-      return;
-    }
-        if(!this.isPlayer && this.item){
-
-      if(Math.random()<0.01){
-
-        if(this.item==="boost"){
-          this.speed+=4;
-          this.item=null;
-        }
-
-                 if(this.item==="spin"){
-
-            cars.forEach(o=>{
-
-              if(o===this) return;
-
-              let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-              if(d<80){
-
-                o.spin=1;
-              }
-            });
-
-            this.item=null;
-          }
-        }
-
-        this.item=null;
-      }
-    }
-
-    let skillFactor = this.skill;
-
-    if(Math.random()<(1-this.skill)*0.002){
-      this.spin=1;
-    }
-
-    if(this.spin>0){
-      this.angle+=0.3;
-      this.speed*=0.4;
-      this.spin-=0.02;
-    }
-
-    // bessere Bots sind stabiler
-    this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
-
-    let error=(1-this.skill)*40;
-
-    let target={
-      x:track[this.cp].x+(Math.random()-0.5)*error,
-      y:track[this.cp].y+(Math.random()-0.5)*error
-    };
-
-    cars.forEach(o=>{
-      if(o===this) return;
-
-      let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-      if(d<60 && o.speed<this.speed){
-        target.x += (this.x-o.x)*0.2;
-        target.y += (this.y-o.y)*0.2;
-      }
-    });
-
-    let dx=target.x-this.x;
-    let dy=target.y-this.y;
-
-    let dist=Math.hypot(dx,dy);
-
-    let ang=Math.atan2(dy,dx);
-
-    let turnSpeed = 0.05 + this.skill * 0.1;
-
-    let diff = ang - this.angle;
-    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-
-    this.angle += diff * turnSpeed;
-
-    this.x += Math.cos(this.angle)*this.speed;
-    this.y += Math.sin(this.angle)*this.speed;
-
-    // Strecke erzwingen
-    let center=closest(this.x,this.y);
-
-    let d=Math.hypot(center.x-this.x,center.y-this.y);
-
-    if(d>trackWidth){
-      this.x += (center.x-this.x)*0.08;
-      this.y += (center.y-this.y)*0.08;
-      this.speed*=0.9;
-    }
-
-    // checkpoint FIX (kein Bug mehr!)
-    if(dist<50){
-      this.cp++;
-
-      if(this.cp>=track.length){
-        this.cp=0;
-        this.lap++;
-
-        if(this.lap>=maxLaps){
-          this.finished=true;
-        }
-      }
-    }
-
-    // collision
-    cars.forEach(o=>{
-      if(o===this) return;
-
-      let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-      if(d<22){
-
-        let push=(22-d)/2;
-
-        let nx=(this.x-o.x)/(d||1);
-        let ny=(this.y-o.y)/(d||1);
-
-        this.x+=nx*push;
-        this.y+=ny*push;
-
-        o.x-=nx*push;
-        o.y-=ny*push;
-
-        this.speed*=0.9;
-      }
-    });
-  }
-
-  draw(){
-
-    ctx.save();
-    ctx.translate(this.x,this.y);
-    ctx.rotate(this.angle);
-
-    ctx.fillStyle=this.color;
-    ctx.fillRect(-10,-6,20,12);
-
-    ctx.restore();
-
-  // 🏷️ NAME ÜBER AUTO
-    ctx.fillStyle="white";
-    ctx.font="12px Arial";
-    ctx.textAlign="center";
-    ctx.fillText(this.name, this.x, this.y - 15);
-  }
-}
-class ItemBox{
-
-  constructor(x,y){
-    this.x=x;
-    this.y=y;
-    this.active=true;
-    this.respawn=0;
-  }
-
-  update(){
-
-    if(!this.active){
-
-      this.respawn--;
-
-      if(this.respawn<=0){
-        this.active=true;
-      }
-    }
-  }
-
-  draw(){
-
-    if(!this.active) return;
-
-    ctx.save();
-
-    ctx.translate(this.x,this.y);
-
-    ctx.fillStyle="gold";
-    ctx.fillRect(-12,-12,24,24);
-
-    ctx.strokeStyle="white";
-    ctx.strokeRect(-12,-12,24,24);
-
-    ctx.restore();
-  }
-
-  check(car){
-
-    if(!this.active) return;
-
-    let d=Math.hypot(car.x-this.x,car.y-this.y);
-
-    if(d<25){
-
-      this.active=false;
-      this.respawn=300;
-
-      giveItem(car);
-    }
-  }
+if(!touchTarget){
+touchTarget = {x:this.x,y:this.y};
 }
 
-function giveItem(car){
+let dx = touchTarget.x - this.x;
+let dy = touchTarget.y - this.y;
 
-  const pool=[
-    "boost",
-    "spin",
-    "banana",
-    "rocket",
-    "explosion"
-  ];
+let angle = Math.atan2(dy,dx);
 
-  car.item=
-  pool[Math.floor(Math.random()*pool.length)];
+let diff = angle - this.angle;
+diff = Math.atan2(Math.sin(diff),Math.cos(diff));
 
-  if(car.isPlayer){
+this.angle += diff * 0.12;
 
-    playerItem=car.item;
+this.speed += (this.targetSpeed - this.speed) * 0.05;
 
-    document.getElementById("itemDisplay")
-    .innerText = "🎁 Item: " + playerItem;
-  }
+this.x += Math.cos(this.angle)*this.speed;
+this.y += Math.sin(this.angle)*this.speed;
+
+let center = closest(this.x,this.y);
+let d = Math.hypot(center.x-this.x,center.y-this.y);
+
+if(d > trackWidth){
+this.x += (center.x-this.x)*0.08;
+this.y += (center.y-this.y)*0.08;
+this.speed *= 0.9;
 }
-c.addEventListener("touchstart", e=>{
-  let t = e.touches[0];
-  const rect = c.getBoundingClientRect();
 
-  touchTarget = {
-    x: t.clientX - rect.left,
-    y: t.clientY - rect.top
-  };
-});
-class Explosion{
+let target = track[this.cp];
+let dist = Math.hypot(target.x-this.x,target.y-this.y);
 
-  constructor(x,y){
-    this.x=x;
-    this.y=y;
-    this.life=30;
-  }
-
-  update(){
-    this.life--;
-  }
-
-  draw(){
-
-    ctx.beginPath();
-
-    ctx.arc(
-      this.x,
-      this.y,
-      40-this.life,
-      0,
-      Math.PI*2
-    );
-
-    ctx.strokeStyle="orange";
-    ctx.lineWidth=4;
-    ctx.stroke();
-  }
+if(dist < 50){
+this.cp++;
+if(this.cp >= track.length){
+this.cp = 0;
+this.lap++;
+if(this.lap >= maxLaps) this.finished = true;
 }
-class Banana{
-
-  constructor(x,y){
-    this.x=x;
-    this.y=y;
-  }
-
-  draw(){
-
-    ctx.fillStyle="yellow";
-
-    ctx.beginPath();
-
-    ctx.arc(this.x,this.y,8,0,Math.PI*2);
-
-    ctx.fill();
-  }
-
-  check(car){
-
-    let d=Math.hypot(car.x-this.x,car.y-this.y);
-
-    if(d<18){
-
-      car.spin=1;
-
-      explosions.push(
-        new Explosion(this.x,this.y)
-      );
-
-      return true;
-    }
-
-    return false;
-  }
 }
-class Rocket{
 
-  constructor(owner){
-
-    this.x=owner.x;
-    this.y=owner.y;
-
-    this.angle=owner.angle;
-
-    this.owner=owner;
-
-    this.dead=false;
-  }
-
-  update(){
-
-    this.x+=Math.cos(this.angle)*8;
-    this.y+=Math.sin(this.angle)*8;
-
-    cars.forEach(c=>{
-
-      if(c===this.owner) return;
-
-      let d=Math.hypot(c.x-this.x,c.y-this.y);
-
-      if(d<20){
-
-        c.spin=1.5;
-
-        explosions.push(
-          new Explosion(this.x,this.y)
-        );
-
-        this.dead=true;
-      }
-    });
-  }
-
-  draw(){
-
-    ctx.save();
-
-    ctx.translate(this.x,this.y);
-    ctx.rotate(this.angle);
-
-    ctx.fillStyle="red";
-
-    ctx.fillRect(-10,-4,20,8);
-
-    ctx.restore();
-  }
+return;
 }
-c.addEventListener("touchmove", e=>{
-  e.preventDefault();
 
-  let t = e.touches[0];
-  const rect = c.getBoundingClientRect();
+// BOT LOGIC
+let target = track[this.cp];
 
-  touchTarget = {
-    x: t.clientX - rect.left,
-    y: t.clientY - rect.top
-  };
-});
+let dx = target.x - this.x;
+let dy = target.y - this.y;
 
-function showSettings(){
-  menu.style.display = "none";
-  ui.style.display = "block";
+let ang = Math.atan2(dy,dx);
+
+let diff = ang - this.angle;
+diff = Math.atan2(Math.sin(diff),Math.cos(diff));
+
+this.angle += diff * (0.05 + this.skill*0.1);
+
+this.speed += (this.targetSpeed - this.speed) * (0.02 + this.skill*0.03);
+
+this.x += Math.cos(this.angle)*this.speed;
+this.y += Math.sin(this.angle)*this.speed;
+
+let center = closest(this.x,this.y);
+let d = Math.hypot(center.x-this.x,center.y-this.y);
+
+if(d > trackWidth){
+this.x += (center.x-this.x)*0.08;
+this.y += (center.y-this.y)*0.08;
+this.speed *= 0.9;
 }
+
+if(Math.hypot(target.x-this.x,target.y-this.y)<50){
+this.cp++;
+if(this.cp>=track.length){
+this.cp=0;
+this.lap++;
+if(this.lap>=maxLaps)this.finished=true;
+}
+}
+
+}
+
+draw(){
+ctx.save();
+ctx.translate(this.x,this.y);
+ctx.rotate(this.angle);
+
+ctx.fillStyle=this.color;
+ctx.fillRect(-10,-6,20,12);
+
+ctx.restore();
+
+ctx.fillStyle="white";
+ctx.font="12px Arial";
+ctx.textAlign="center";
+ctx.fillText(this.name,this.x,this.y-15);
+}
+}
+
 // ================= TRACK HELP =================
 function closest(x,y){
+let best=null;
+let bd=99999;
 
-  let best=null;
-  let bd=99999;
+for(let i=0;i<track.length;i++){
+let a=track[i];
+let b=track[(i+1)%track.length];
 
-  for(let i=0;i<track.length;i++){
+let p=project(x,y,a,b);
+let d=Math.hypot(p.x-x,p.y-y);
 
-    let a=track[i];
-    let b=track[(i+1)%track.length];
-
-    let p=project(x,y,a,b);
-
-    let d=Math.hypot(p.x-x,p.y-y);
-
-    if(d<bd){
-      bd=d;
-      best=p;
-    }
-  }
-
-  return best;
+if(d<bd){
+bd=d;
+best=p;
+}
+}
+return best;
 }
 
 function project(px,py,a,b){
+let vx=b.x-a.x;
+let vy=b.y-a.y;
 
-  let vx=b.x-a.x;
-  let vy=b.y-a.y;
+let wx=px-a.x;
+let wy=py-a.y;
 
-  let wx=px-a.x;
-  let wy=py-a.y;
+let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
+t=Math.max(0,Math.min(1,t));
 
-  let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
-
-  t=Math.max(0,Math.min(1,t));
-
-  return{
-    x:a.x+vx*t,
-    y:a.y+vy*t
-  };
+return {
+x:a.x+vx*t,
+y:a.y+vy*t
+};
 }
 
 // ================= GAME =================
 let cars=[];
 let maxLaps=5;
 let running=false;
-let touchTarget = null;
-let items = [];
-let playerItem = null;
-let bananas = [];
-let rockets = [];
-let explosions = [];
+let touchTarget=null;
 
+function openGame(){
+menu.style.display="none";
+ui.style.display="block";
+setTimeout(startRace,50);
+}
 
 function startRace(){
 
 cars=[];
 
 let n=+document.getElementById("bots").value;
-
 maxLaps=+document.getElementById("laps").value;
 
-let playerName=
-document.getElementById("playerName").value || "Player";
+let playerName=document.getElementById("playerName").value||"Player";
 
-// SPIELER
 let player=new Car(0,playerName,0.65);
-
 player.isPlayer=true;
 
 cars.push(player);
 
-// BOTS
 for(let i=1;i<n;i++){
-
-cars.push(
-new Car(i,"Bot "+i,0.65)
-);
-
-}
-
-items=[];
-
-for(let i=0;i<8;i++){
-
-  let p=
-  track[Math.floor(Math.random()*track.length)];
-
-  items.push(
-
-    new ItemBox(
-
-      p.x+(Math.random()-0.5)*120,
-      p.y+(Math.random()-0.5)*120
-    )
-  );
+cars.push(new Car(i,"Bot "+i,0.65));
 }
 
 running=false;
 
-countdown(()=>{
-running=true;
-});
-
+countdown(()=>running=true);
 }
 
-// ================= DRAW TRACK =================
+// ================= DRAW =================
 function drawTrack(){
 
-  ctx.strokeStyle="#555";
-  ctx.lineWidth=trackWidth*2;
+ctx.strokeStyle="#555";
+ctx.lineWidth=trackWidth*2;
 
-  ctx.beginPath();
-  ctx.moveTo(track[0].x,track[0].y);
+ctx.beginPath();
+ctx.moveTo(track[0].x,track[0].y);
 
-  for(let p of track){
-    ctx.lineTo(p.x,p.y);
-  }
+for(let p of track) ctx.lineTo(p.x,p.y);
 
-  ctx.closePath();
-  ctx.stroke();
-
-  ctx.strokeStyle="white";
-  ctx.lineWidth=2;
-  ctx.setLineDash([10,10]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // checkpoints sichtbar
-  ctx.fillStyle="yellow";
-  track.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,6,0,Math.PI*2);
-    ctx.fill();
-  });
-}
-
-// ================= SCORE (FIXED!) =================
-function score(){
-
-  cars.forEach(c=>{
-
-    // Zielcheckpoint
-    let target = track[c.cp];
-
-    // Distanz zum nächsten Checkpoint
-    let dist = Math.hypot(target.x - c.x, target.y - c.y);
-
-    // Mehr Fortschritt = bessere Position
-    c.progress =
-      c.lap * 100000 +
-      c.cp * 1000 -
-      dist;
-  });
-
-  let sorted = [...cars].sort((a,b)=>b.progress-a.progress);
-
-  let html = "<h3>🏆 Live Ranking</h3>";
-
-  sorted.forEach((c,i)=>{
-    html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
-  });
-
-  document.getElementById("score").innerHTML = html;
+ctx.closePath();
+ctx.stroke();
 }
 
 // ================= LOOP =================
 function loop(){
 
-  ctx.clearRect(0,0,c.width,c.height);
+ctx.clearRect(0,0,c.width,c.height);
 
-  drawTrack();
-bananas.forEach(b=>{
-  b.draw();
+drawTrack();
+
+cars.forEach(c=>{
+if(running)c.update();
+c.draw();
 });
 
-rockets.forEach(r=>{
-  r.update();
-  r.draw();
-});
-
-rockets=
-rockets.filter(r=>!r.dead);
-
-explosions.forEach(e=>{
-  e.update();
-  e.draw();
-});
-
-explosions=
-explosions.filter(e=>e.life>0);
-
-  items.forEach(i=>{
-    i.update();
-    i.draw();
-  });
-  bananas=
-  bananas.filter(b=>!b.check(c));
-
-  let done=true;
-
-  cars.forEach(c=>{
-    if(running)c.update();
-    c.draw();
-    items.forEach(i=>{
-    i.check(c);
-  });
-    if(!c.finished)done=false;
-  });
-
-  if(running && done){
-    running=false;
-
-    cars.forEach((c,i)=>{
-      c.points += [10,7,5,3,1][i] || 1;
-    });
-  }
-
-  score();
-
-  requestAnimationFrame(loop);
+requestAnimationFrame(loop);
 }
 
 function countdown(cb){
+let el=document.createElement("div");
+el.style.position="absolute";
+el.style.top="50%";
+el.style.left="50%";
+el.style.transform="translate(-50%,-50%)";
+el.style.fontSize="80px";
+el.style.color="white";
+document.body.appendChild(el);
 
-  let el=document.createElement("div");
-  el.style.position="absolute";
-  el.style.top="50%";
-  el.style.left="50%";
-  el.style.transform="translate(-50%,-50%)";
-  el.style.fontSize="80px";
-  el.style.color="white";
-  document.body.appendChild(el);
+let n=3;
 
-  let n=3;
-
-  let int=setInterval(()=>{
-
-    if(n===0){
-      el.innerText="GO!";
-      setTimeout(()=>{
-        el.remove();
-        clearInterval(int);
-        cb();
-      },800);
-      return;
-    }
-
-    el.innerText=n;
-    n--;
-
-  },1000);
+let int=setInterval(()=>{
+if(n===0){
+el.innerText="GO!";
+setTimeout(()=>{
+el.remove();
+clearInterval(int);
+cb();
+},800);
+return;
 }
-window.addEventListener("resize", ()=>{
-  c.width = innerWidth;
-  c.height = innerHeight;
-});
-document.getElementById("useItemBtn").onclick=()=>{
+el.innerText=n;
+n--;
+},1000);
+}
 
-  let player = cars.find(c=>c.isPlayer);
-
-  if(!player || !player.item) return;
-
-  if(player.item==="boost"){
-    player.speed+=5;
-  }
-
-  if(player.item==="spin"){
-    cars.forEach(o=>{
-      if(o===player) return;
-
-      let d=Math.hypot(o.x-player.x,o.y-player.y);
-      if(d<120) o.spin=1;
-    });
-  }
-
-  if(player.item==="banana"){
-    bananas.push(new Banana(player.x,player.y));
-  }
-
-  if(player.item==="rocket"){
-    rockets.push(new Rocket(player));
-  }
-
-  if(player.item==="explosion"){
-    explosions.push(new Explosion(player.x,player.y));
-
-    cars.forEach(o=>{
-      if(o===player) return;
-
-      let d=Math.hypot(o.x-player.x,o.y-player.y);
-      if(d<140) o.spin=1.5;
-    });
-  }
-
-  player.item=null;
-  playerItem=null;
-
-  document.getElementById("itemDisplay").innerText="";
-};
 loop();
 
 </script>
 
 </body>
-</html>   
+</html>
