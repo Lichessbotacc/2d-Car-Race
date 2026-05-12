@@ -840,76 +840,49 @@ window.addEventListener("resize", ()=>{
   c.width = innerWidth;
   c.height = innerHeight;
 });
-document
-.getElementById("useItemBtn")
-.onclick=()=>{
+document.getElementById("useItemBtn").onclick=()=>{
 
-  let player=
-  cars.find(c=>c.isPlayer);
+  let player = cars.find(c=>c.isPlayer);
 
   if(!player || !player.item) return;
 
   if(player.item==="boost"){
-
     player.speed+=5;
   }
 
   if(player.item==="spin"){
-
     cars.forEach(o=>{
-
       if(o===player) return;
 
-      let d=Math.hypot(
-        o.x-player.x,
-        o.y-player.y
-      );
-
-      if(d<120){
-        o.spin=1;
-      }
+      let d=Math.hypot(o.x-player.x,o.y-player.y);
+      if(d<120) o.spin=1;
     });
   }
 
   if(player.item==="banana"){
-
-    bananas.push(
-      new Banana(player.x,player.y)
-    );
+    bananas.push(new Banana(player.x,player.y));
   }
 
   if(player.item==="rocket"){
-
-    rockets.push(
-      new Rocket(player)
-    );
+    rockets.push(new Rocket(player));
   }
+
   if(player.item==="explosion"){
+    explosions.push(new Explosion(player.x,player.y));
 
-  explosions.push(
-    new Explosion(player.x, player.y)
-  );
+    cars.forEach(o=>{
+      if(o===player) return;
 
-  cars.forEach(o=>{
+      let d=Math.hypot(o.x-player.x,o.y-player.y);
+      if(d<140) o.spin=1.5;
+    });
+  }
 
-    if(o===player) return;
+  player.item=null;
+  playerItem=null;
 
-    let d=Math.hypot(
-      o.x-player.x,
-      o.y-player.y
-    );
-
-    if(d<140){
-      o.spin=1.5;
-    }
-  });
-}
-
-player.item=null;
-playerItem=null;
-
-document.getElementById("itemDisplay")
-.innerText = "";
+  document.getElementById("itemDisplay").innerText="";
+};
 loop();
 
 </script>
