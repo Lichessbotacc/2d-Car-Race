@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Racing Arena</title>
+<title>Racing Arena Fixed</title>
 
 <style>
-body{margin:0;overflow:hidden;background:#1c1c1c;font-family:Arial;}
+body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
 canvas{display:block;}
 #ui{
 position:absolute;top:10px;left:10px;
@@ -15,7 +15,7 @@ padding:12px;border-radius:10px;
 width:260px;color:white;
 }
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
-button{background:#00c27a;color:white;font-weight:bold;cursor:pointer;}
+button{background:#00c27a;color:white;font-weight:bold;}
 #score{margin-top:10px;font-size:13px;}
 </style>
 </head>
@@ -49,25 +49,30 @@ c.height=innerHeight;
 const cx=c.width/2;
 const cy=c.height/2;
 
-// ================= TRACK =================
+// ================= TRACK (mehrere Checkpoints!) =================
 const track=[
   {x:cx+300,y:cy},
-  {x:cx+150,y:cy-200},
-  {x:cx-200,y:cy-180},
-  {x:cx-300,y:cy+50},
-  {x:cx-100,y:cy+220},
-  {x:cx+200,y:cy+180}
+  {x:cx+200,y:cy-200},
+  {x:cx-100,y:cy-220},
+  {x:cx-300,y:cy-50},
+  {x:cx-200,y:cy+200},
+  {x:cx+100,y:cy+220}
 ];
 
 const trackWidth=70;
 
 // ================= CAR =================
 class Car{
-  constructor(i){
+  constructor(i,name){
+
+    this.name=name;
+
     this.x=track[0].x;
     this.y=track[0].y;
 
-    this.i=0;
+    this.cp=1;
+    this.lap=0;
+
     this.angle=0;
 
     this.speed=2;
@@ -75,10 +80,7 @@ class Car{
 
     this.color=`hsl(${i*50},80%,60%)`;
 
-    this.lap=0;
-    this.cp=1;
     this.finished=false;
-
     this.points=0;
 
     setInterval(()=>{
@@ -101,24 +103,24 @@ class Car{
 
     let ang=Math.atan2(dy,dx);
 
-    this.angle += (ang-this.angle)*0.1;
+    this.angle += (ang-this.angle)*0.12;
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
 
-    // wenn zu weit weg von Strecke → zurückziehen
-    let center=closestSegmentPoint(this.x,this.y);
+    // Strecke erzwingen
+    let center=closest(this.x,this.y);
 
     let d=Math.hypot(center.x-this.x,center.y-this.y);
 
     if(d>trackWidth){
-      this.x += (center.x-this.x)*0.05;
-      this.y += (center.y-this.y)*0.05;
+      this.x += (center.x-this.x)*0.08;
+      this.y += (center.y-this.y)*0.08;
       this.speed*=0.9;
     }
 
-    // checkpoint
-    if(dist<40){
+    // checkpoint FIX (kein Bug mehr!)
+    if(dist<50){
       this.cp++;
 
       if(this.cp>=track.length){
@@ -131,13 +133,14 @@ class Car{
       }
     }
 
-    // car collision
+    // collision
     cars.forEach(o=>{
-      if(o===this)return;
+      if(o===this) return;
 
       let d=Math.hypot(o.x-this.x,o.y-this.y);
 
       if(d<22){
+
         let push=(22-d)/2;
 
         let nx=(this.x-o.x)/d;
@@ -171,7 +174,8 @@ class Car{
 }
 
 // ================= TRACK HELP =================
-function closestSegmentPoint(x,y){
+function closest(x,y){
+
   let best=null;
   let bd=99999;
 
@@ -223,19 +227,19 @@ function start(){
   maxLaps=+document.getElementById("laps").value;
 
   for(let i=0;i<n;i++){
-    cars.push(new Car(i));
+    cars.push(new Car(i,"Bot "+(i+1)));
   }
 
   running=true;
 }
 
-// ================= DRAW =================
+// ================= DRAW TRACK =================
 function drawTrack(){
 
   ctx.strokeStyle="#555";
   ctx.lineWidth=trackWidth*2;
-  ctx.beginPath();
 
+  ctx.beginPath();
   ctx.moveTo(track[0].x,track[0].y);
 
   for(let p of track){
@@ -245,22 +249,30 @@ function drawTrack(){
   ctx.closePath();
   ctx.stroke();
 
-  ctx.strokeStyle="#fff";
+  ctx.strokeStyle="white";
   ctx.lineWidth=2;
   ctx.setLineDash([10,10]);
   ctx.stroke();
   ctx.setLineDash([]);
+
+  // checkpoints sichtbar
+  ctx.fillStyle="yellow";
+  track.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,6,0,Math.PI*2);
+    ctx.fill();
+  });
 }
 
-// ================= SCORE =================
+// ================= SCORE (FIXED!) =================
 function score(){
 
-  cars.sort((a,b)=>b.lap-a.lap);
+  let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
 
-  let html="<h3>🏆</h3>";
+  let html="<h3>🏆 Ranking</h3>";
 
-  cars.forEach((c,i)=>{
-    html+=`${i+1}. Lap ${c.lap}<br>`;
+  sorted.forEach((c,i)=>{
+    html+=`${i+1}. ${c.name} | Lap ${c.lap}<br>`;
   });
 
   document.getElementById("score").innerHTML=html;
@@ -283,6 +295,10 @@ function loop(){
 
   if(running && done){
     running=false;
+
+    cars.forEach((c,i)=>{
+      c.points += [10,7,5,3,1][i] || 1;
+    });
   }
 
   score();
