@@ -99,7 +99,10 @@ class Car{
     // bessere Bots sind stabiler
     this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
 
-    let t=track[this.cp];
+    let t = {
+      x: track[this.cp].x + (Math.random()-0.5) * (1 - this.skill) * 30,
+      y: track[this.cp].y + (Math.random()-0.5) * (1 - this.skill) * 30
+    };
 
     let dx=t.x-this.x;
     let dy=t.y-this.y;
