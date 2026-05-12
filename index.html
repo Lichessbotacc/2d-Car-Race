@@ -17,28 +17,7 @@ width:260px;color:white;
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
 #score{margin-top:10px;font-size:13px;}
-#joystick{
-position:absolute;
-bottom:40px;
-left:40px;
-width:120px;
-height:120px;
-border-radius:50%;
-background:rgba(255,255,255,0.15);
-border:2px solid rgba(255,255,255,0.25);
-touch-action:none;
-z-index:5;
-}
 
-#stick{
-position:absolute;
-left:35px;
-top:35px;
-width:50px;
-height:50px;
-border-radius:50%;
-background:white;
-}
 </style>
 </head>
 
@@ -61,9 +40,6 @@ Spielername:
 <div id="score"></div>
 </div>
 
-<div id="joystick">
-  <div id="stick"></div>
-</div>
 
 <canvas id="c"></canvas>
 
@@ -136,51 +112,56 @@ class Car{
 
     if(this.isPlayer){
 
-    let steer=joystick.dx;
+      if(touchTarget){
 
-    this.angle+=steer*0.08;
+        let dx = touchTarget.x - this.x;
+        let dy = touchTarget.y - this.y;
 
-    this.speed+=(this.targetSpeed-this.speed)*0.05;
+        let angle = Math.atan2(dy, dx);
 
-    this.x+=Math.cos(this.angle)*this.speed;
-    this.y+=Math.sin(this.angle)*this.speed;
+        let diff = angle - this.angle;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-    let center=closest(this.x,this.y);
+        this.angle += diff * 0.12;
+      }
 
-    let d=Math.hypot(center.x-this.x,center.y-this.y);
+      this.speed += (this.targetSpeed - this.speed) * 0.05;
 
-    if(d>trackWidth){
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
 
-    this.x+=(center.x-this.x)*0.08;
-    this.y+=(center.y-this.y)*0.08;
+      let center = closest(this.x,this.y);
 
-    this.speed*=0.9;
-    }
+      let d = Math.hypot(center.x-this.x, center.y-this.y);
 
-    let target=track[this.cp];
+      if(d > trackWidth){
+        this.x += (center.x-this.x)*0.08;
+        this.y += (center.y-this.y)*0.08;
+        this.speed *= 0.9;
+      }
 
-    let dist=Math.hypot(
-    target.x-this.x,
-    target.y-this.y
-    );
+      let target = track[this.cp];
 
-    if(dist<50){
+      let dist = Math.hypot(
+        target.x - this.x,
+        target.y - this.y
+      );
 
-    this.cp++;
+      if(dist < 50){
 
-    if(this.cp>=track.length){
+        this.cp++;
 
-    this.cp=0;
-    this.lap++;
+        if(this.cp >= track.length){
+          this.cp = 0;
+          this.lap++;
 
-    if(this.lap>=maxLaps){
-    this.finished=true;
-    }
+          if(this.lap >= maxLaps){
+            this.finished = true;
+          }
+        }
+      }
 
-    }
-    }
-
-    return;
+      return;
     }
 
     let skillFactor = this.skill;
@@ -301,6 +282,30 @@ class Car{
   }
 }
 
+c.addEventListener("touchstart", e=>{
+  let t = e.touches[0];
+
+  touchTarget = {
+    x: t.clientX,
+    y: t.clientY
+  };
+});
+
+c.addEventListener("touchmove", e=>{
+  e.preventDefault();
+
+  let t = e.touches[0];
+
+  touchTarget = {
+    x: t.clientX,
+    y: t.clientY
+  };
+});
+
+c.addEventListener("touchend", ()=>{
+  touchTarget = null;
+});
+
 // ================= TRACK HELP =================
 function closest(x,y){
 
@@ -347,11 +352,7 @@ function project(px,py,a,b){
 let cars=[];
 let maxLaps=5;
 let running=false;
-let joystick = {
-active:false,
-dx:0,
-dy:0
-};
+let touchTarget = null;
 
 const joy=document.getElementById("joystick");
 const stick=document.getElementById("stick");
