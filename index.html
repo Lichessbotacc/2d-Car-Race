@@ -17,6 +17,28 @@ width:260px;color:white;
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
 #score{margin-top:10px;font-size:13px;}
+#joystick{
+position:absolute;
+bottom:40px;
+left:40px;
+width:120px;
+height:120px;
+border-radius:50%;
+background:rgba(255,255,255,0.15);
+border:2px solid rgba(255,255,255,0.25);
+touch-action:none;
+z-index:5;
+}
+
+#stick{
+position:absolute;
+left:35px;
+top:35px;
+width:50px;
+height:50px;
+border-radius:50%;
+background:white;
+}
 </style>
 </head>
 
@@ -31,9 +53,16 @@ Bots:
 Runden:
 <input id="laps" type="number" value="5">
 
+Spielername:
+<input id="playerName" type="text" value="Player">
+
 <button onclick="startRace()">START</button>
 
 <div id="score"></div>
+</div>
+
+<div id="joystick">
+  <div id="stick"></div>
 </div>
 
 <canvas id="c"></canvas>
@@ -69,13 +98,23 @@ class Car{
 
     this.name=name;
 
-    this.x=track[0].x;
-    this.y=track[0].y;
+    let dx = track[1].x - track[0].x;
+    let dy = track[1].y - track[0].y;
+
+    this.angle = Math.atan2(dy, dx);
+
+    this.x =
+    track[0].x
+    - Math.cos(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
+    - Math.cos(this.angle) * i * 35;
+
+    this.y =
+    track[0].y
+    - Math.sin(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
+    - Math.sin(this.angle) * i * 35;
 
     this.cp=1;
     this.lap=0;
-
-    this.angle=0;
 
     this.speed=2;
     this.targetSpeed=2;
@@ -94,6 +133,55 @@ class Car{
   update(){
 
     if(this.finished) return;
+
+    if(this.isPlayer){
+
+    let steer=joystick.dx;
+
+    this.angle+=steer*0.08;
+
+    this.speed+=(this.targetSpeed-this.speed)*0.05;
+
+    this.x+=Math.cos(this.angle)*this.speed;
+    this.y+=Math.sin(this.angle)*this.speed;
+
+    let center=closest(this.x,this.y);
+
+    let d=Math.hypot(center.x-this.x,center.y-this.y);
+
+    if(d>trackWidth){
+
+    this.x+=(center.x-this.x)*0.08;
+    this.y+=(center.y-this.y)*0.08;
+
+    this.speed*=0.9;
+    }
+
+    let target=track[this.cp];
+
+    let dist=Math.hypot(
+    target.x-this.x,
+    target.y-this.y
+    );
+
+    if(dist<50){
+
+    this.cp++;
+
+    if(this.cp>=track.length){
+
+    this.cp=0;
+    this.lap++;
+
+    if(this.lap>=maxLaps){
+    this.finished=true;
+    }
+
+    }
+    }
+
+    return;
+    }
 
     let skillFactor = this.skill;
 
@@ -259,27 +347,105 @@ function project(px,py,a,b){
 let cars=[];
 let maxLaps=5;
 let running=false;
+let joystick = {
+active:false,
+dx:0,
+dy:0
+};
+
+const joy=document.getElementById("joystick");
+const stick=document.getElementById("stick");
 
 function startRace(){
 
-  cars=[];
-  let n=+document.getElementById("bots").value;
-  maxLaps=+document.getElementById("laps").value;
+cars=[];
 
-  for(let i=0;i<n;i++){
+let n=+document.getElementById("bots").value;
 
-    let skill=0.3+(1-(i/(n-1)))*0.7;
+maxLaps=+document.getElementById("laps").value;
 
-    cars.push(new Car(i,"Bot "+(i+1),skill));
-  }
+let playerName=
+document.getElementById("playerName").value || "Player";
 
-  running=false;
+// SPIELER
+let player=new Car(0,playerName,0.65);
 
-  countdown(()=>{
-    running=true;
-  });
+player.isPlayer=true;
+
+cars.push(player);
+
+// BOTS
+for(let i=1;i<n;i++){
+
+cars.push(
+new Car(i,"Bot "+i,0.65)
+);
+
 }
 
+running=false;
+
+countdown(()=>{
+running=true;
+});
+
+}
+function moveStick(x,y){
+
+const rect=joy.getBoundingClientRect();
+
+let cx=rect.left+rect.width/2;
+let cy=rect.top+rect.height/2;
+
+let dx=x-cx;
+let dy=y-cy;
+
+let dist=Math.hypot(dx,dy);
+
+let max=35;
+
+if(dist>max){
+dx=dx/dist*max;
+dy=dy/dist*max;
+}
+
+joystick.dx=dx/max;
+joystick.dy=dy/max;
+
+stick.style.left=(35+dx)+"px";
+stick.style.top=(35+dy)+"px";
+}
+
+function resetStick(){
+
+joystick.dx=0;
+joystick.dy=0;
+
+stick.style.left="35px";
+stick.style.top="35px";
+}
+
+joy.addEventListener("touchstart",e=>{
+joystick.active=true;
+});
+
+joy.addEventListener("touchmove",e=>{
+
+e.preventDefault();
+
+let t=e.touches[0];
+
+moveStick(t.clientX,t.clientY);
+
+});
+
+joy.addEventListener("touchend",()=>{
+
+joystick.active=false;
+
+resetStick();
+
+});
 // ================= DRAW TRACK =================
 function drawTrack(){
 
