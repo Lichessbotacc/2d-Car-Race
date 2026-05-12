@@ -100,6 +100,7 @@ class Car{
     this.finished=false;
     this.points=0;
     this.spin = 0;
+    this.isPlayer = false;
 
     setInterval(()=>{
       this.targetSpeed=1+Math.random()*3;
@@ -284,10 +285,11 @@ class Car{
 
 c.addEventListener("touchstart", e=>{
   let t = e.touches[0];
+  const rect = c.getBoundingClientRect();
 
   touchTarget = {
-    x: t.clientX,
-    y: t.clientY
+    x: t.clientX - rect.left,
+    y: t.clientY - rect.top
   };
 });
 
@@ -295,15 +297,12 @@ c.addEventListener("touchmove", e=>{
   e.preventDefault();
 
   let t = e.touches[0];
+  const rect = c.getBoundingClientRect();
 
   touchTarget = {
-    x: t.clientX,
-    y: t.clientY
+    x: t.clientX - rect.left,
+    y: t.clientY - rect.top
   };
-});
-
-c.addEventListener("touchend", ()=>{
-  touchTarget = null;
 });
 
 // ================= TRACK HELP =================
@@ -354,8 +353,7 @@ let maxLaps=5;
 let running=false;
 let touchTarget = null;
 
-const joy=document.getElementById("joystick");
-const stick=document.getElementById("stick");
+
 
 function startRace(){
 
@@ -391,62 +389,7 @@ running=true;
 });
 
 }
-function moveStick(x,y){
 
-const rect=joy.getBoundingClientRect();
-
-let cx=rect.left+rect.width/2;
-let cy=rect.top+rect.height/2;
-
-let dx=x-cx;
-let dy=y-cy;
-
-let dist=Math.hypot(dx,dy);
-
-let max=35;
-
-if(dist>max){
-dx=dx/dist*max;
-dy=dy/dist*max;
-}
-
-joystick.dx=dx/max;
-joystick.dy=dy/max;
-
-stick.style.left=(35+dx)+"px";
-stick.style.top=(35+dy)+"px";
-}
-
-function resetStick(){
-
-joystick.dx=0;
-joystick.dy=0;
-
-stick.style.left="35px";
-stick.style.top="35px";
-}
-
-joy.addEventListener("touchstart",e=>{
-joystick.active=true;
-});
-
-joy.addEventListener("touchmove",e=>{
-
-e.preventDefault();
-
-let t=e.touches[0];
-
-moveStick(t.clientX,t.clientY);
-
-});
-
-joy.addEventListener("touchend",()=>{
-
-joystick.active=false;
-
-resetStick();
-
-});
 // ================= DRAW TRACK =================
 function drawTrack(){
 
@@ -565,6 +508,10 @@ function countdown(cb){
 
   },1000);
 }
+window.addEventListener("resize", ()=>{
+  c.width = innerWidth;
+  c.height = innerHeight;
+});
 
 loop();
 
