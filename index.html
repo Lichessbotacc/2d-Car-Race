@@ -427,7 +427,7 @@ function giveItem(car){
   "boost",
   "spin",
   "banana",
-  "rocket"
+  "rocket",
   "explosion
 ];
 
@@ -881,6 +881,26 @@ document
       new Rocket(player)
     );
   }
+  if(player.item==="explosion"){
+
+  explosions.push(
+    new Explosion(player.x, player.y)
+  );
+
+  cars.forEach(o=>{
+
+    if(o===player) return;
+
+    let d=Math.hypot(
+      o.x-player.x,
+      o.y-player.y
+    );
+
+    if(d<140){
+      o.spin=1.5;
+    }
+  });
+}
 
   player.item=null;
   playerItem=null;
