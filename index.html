@@ -711,27 +711,30 @@ ctx.lineWidth = 4;
 
 for (let i = 0; i < track.length; i++) {
 
-  let p = track[i];
+  let a = track[i];
+  let b = track[(i + 1) % track.length];
 
-  // Richtung zum nächsten Checkpoint
-  let next = track[(i + 1) % track.length];
+  // Mittelpunkt zwischen zwei Punkten = Checkpoint-Position
+  let mx = (a.x + b.x) / 2;
+  let my = (a.y + b.y) / 2;
 
-  let dx = next.x - p.x;
-  let dy = next.y - p.y;
+  // Richtung der Strecke
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
 
+  // Normale (90° gedreht) → damit Linie quer zur Strecke steht
   let len = Math.hypot(dx, dy) || 1;
   dx /= len;
   dy /= len;
 
-  // 90° Rotation (Gate Richtung)
   let nx = -dy;
   let ny = dx;
 
-  let size = 70;
+  let size = 80; // Länge der Checkpoint-Linie
 
   ctx.beginPath();
-  ctx.moveTo(p.x - nx * size, p.y - ny * size);
-  ctx.lineTo(p.x + nx * size, p.y + ny * size);
+  ctx.moveTo(mx - nx * size, my - ny * size);
+  ctx.lineTo(mx + nx * size, my + ny * size);
   ctx.stroke();
 }
 }
