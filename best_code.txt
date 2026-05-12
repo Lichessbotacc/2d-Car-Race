@@ -17,12 +17,37 @@ width:260px;color:white;
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
 #score{margin-top:10px;font-size:13px;}
+
+#menu{
+position:absolute;
+top:0;left:0;
+width:100%;
+height:100%;
+background:#111;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+color:white;
+z-index:10;
+}
+
+#menu h2{
+font-size:40px;
+margin-bottom:20px;
+}
+
+#menu button{
+width:200px;
+margin:8px;
+font-size:16px;
+}
 </style>
 </head>
 
 <body>
 
-<div id="ui">
+<div id="ui" style="display:none;">
 <h3>🏁 Racing Arena</h3>
 
 Bots:
@@ -31,17 +56,32 @@ Bots:
 Runden:
 <input id="laps" type="number" value="5">
 
-<button onclick="start()">START</button>
+Spielername:
+<input id="playerName" type="text" value="Player">
+
+<button onclick="startRace()">START</button>
 
 <div id="score"></div>
+<div id="itemDisplay"></div>
+<button id="useItemBtn">USE ITEM</button>
 </div>
 
+<div id="menu">
+  <h2>🏁 Racing Arena</h2>
+
+  <button onclick="showSettings()">▶ Start Game</button>
+  <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
+  <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
+</div>
+  
 <canvas id="c"></canvas>
 
 <script>
 
 const c=document.getElementById("c");
 const ctx=c.getContext("2d");
+let menu = document.getElementById("menu");
+let ui = document.getElementById("ui");
 
 c.width=innerWidth;
 c.height=innerHeight;
@@ -63,17 +103,29 @@ const trackWidth=70;
 
 // ================= CAR =================
 class Car{
-  constructor(i,name){
+  constructor(i,name,skill=1){
+
+  this.skill = skill;
 
     this.name=name;
 
-    this.x=track[0].x;
-    this.y=track[0].y;
+    let dx = track[1].x - track[0].x;
+    let dy = track[1].y - track[0].y;
+
+    this.angle = Math.atan2(dy, dx);
+
+    this.x =
+    track[0].x
+    - Math.cos(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
+    - Math.cos(this.angle) * i * 35;
+
+    this.y =
+    track[0].y
+    - Math.sin(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
+    - Math.sin(this.angle) * i * 35;
 
     this.cp=1;
     this.lap=0;
-
-    this.angle=0;
 
     this.speed=2;
     this.targetSpeed=2;
@@ -82,6 +134,8 @@ class Car{
 
     this.finished=false;
     this.points=0;
+    this.spin = 0;
+    this.isPlayer = false;
 
     setInterval(()=>{
       this.targetSpeed=1+Math.random()*3;
@@ -91,19 +145,152 @@ class Car{
   update(){
 
     if(this.finished) return;
+    if(this.item==="boost"){
 
-    this.speed += (this.targetSpeed-this.speed)*0.05;
+      this.speed+=0.15;
+    }
 
-    let t=track[this.cp];
+    if(this.item==="spin"){
 
-    let dx=t.x-this.x;
-    let dy=t.y-this.y;
+      cars.forEach(o=>{
+
+        if(o===this) return;
+
+        let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+        if(d<80){
+
+      o.spin=1;
+        }
+      });
+    }
+
+    if(this.isPlayer){
+
+      if(touchTarget){
+
+        let dx = touchTarget.x - this.x;
+        let dy = touchTarget.y - this.y;
+
+        let angle = Math.atan2(dy, dx);
+
+        let diff = angle - this.angle;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+
+        this.angle += diff * 0.12;
+      }
+
+      this.speed += (this.targetSpeed - this.speed) * 0.05;
+
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+
+      let center = closest(this.x,this.y);
+
+      let d = Math.hypot(center.x-this.x, center.y-this.y);
+
+      if(d > trackWidth){
+        this.x += (center.x-this.x)*0.08;
+        this.y += (center.y-this.y)*0.08;
+        this.speed *= 0.9;
+      }
+
+      let target = track[this.cp];
+
+      let dist = Math.hypot(
+        target.x - this.x,
+        target.y - this.y
+      );
+
+      if(dist < 50){
+
+        this.cp++;
+
+        if(this.cp >= track.length){
+          this.cp = 0;
+          this.lap++;
+
+          if(this.lap >= maxLaps){
+            this.finished = true;
+          }
+        }
+      }
+
+      return;
+    }
+        if(!this.isPlayer && this.item){
+
+      if(Math.random()<0.01){
+
+        if(this.item==="boost"){
+          this.speed+=4;
+          this.item=null;
+        }
+
+       if(this.item==="spin"){
+
+          cars.forEach(o=>{
+
+            if(o===this) return;
+
+            let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+            if(d<100){
+              o.spin=1;
+            }
+          });
+        }
+
+        this.item=null;
+      }
+    }
+
+    let skillFactor = this.skill;
+
+    if(Math.random()<(1-this.skill)*0.002){
+      this.spin=1;
+    }
+
+    if(this.spin>0){
+      this.angle+=0.3;
+      this.speed*=0.4;
+      this.spin-=0.02;
+    }
+
+    // bessere Bots sind stabiler
+    this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
+
+    let error=(1-this.skill)*40;
+
+    let target={
+      x:track[this.cp].x+(Math.random()-0.5)*error,
+      y:track[this.cp].y+(Math.random()-0.5)*error
+    };
+
+    cars.forEach(o=>{
+      if(o===this) return;
+
+      let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+      if(d<60 && o.speed<this.speed){
+        target.x += (this.x-o.x)*0.2;
+        target.y += (this.y-o.y)*0.2;
+      }
+    });
+
+    let dx=target.x-this.x;
+    let dy=target.y-this.y;
 
     let dist=Math.hypot(dx,dy);
 
     let ang=Math.atan2(dy,dx);
 
-    this.angle += (ang-this.angle)*0.12;
+    let turnSpeed = 0.05 + this.skill * 0.1;
+
+    let diff = ang - this.angle;
+    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+
+    this.angle += diff * turnSpeed;
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
@@ -143,8 +330,8 @@ class Car{
 
         let push=(22-d)/2;
 
-        let nx=(this.x-o.x)/d;
-        let ny=(this.y-o.y)/d;
+        let nx=(this.x-o.x)/(d||1);
+        let ny=(this.y-o.y)/(d||1);
 
         this.x+=nx*push;
         this.y+=ny*push;
@@ -166,13 +353,229 @@ class Car{
     ctx.fillStyle=this.color;
     ctx.fillRect(-10,-6,20,12);
 
-    ctx.fillStyle="#111";
-    ctx.fillRect(-4,-3,8,6);
+    ctx.restore();
+
+  // 🏷️ NAME ÜBER AUTO
+    ctx.fillStyle="white";
+    ctx.font="12px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(this.name, this.x, this.y - 15);
+  }
+}
+class ItemBox{
+
+  constructor(x,y){
+    this.x=x;
+    this.y=y;
+    this.active=true;
+    this.respawn=0;
+  }
+
+  update(){
+
+    if(!this.active){
+
+      this.respawn--;
+
+      if(this.respawn<=0){
+        this.active=true;
+      }
+    }
+  }
+
+  draw(){
+
+    if(!this.active) return;
+
+    ctx.save();
+
+    ctx.translate(this.x,this.y);
+
+    ctx.fillStyle="gold";
+    ctx.fillRect(-12,-12,24,24);
+
+    ctx.strokeStyle="white";
+    ctx.strokeRect(-12,-12,24,24);
+
+    ctx.restore();
+  }
+
+  check(car){
+
+    if(!this.active) return;
+
+    let d=Math.hypot(car.x-this.x,car.y-this.y);
+
+    if(d<25){
+
+      this.active=false;
+      this.respawn=300;
+
+      giveItem(car);
+    }
+  }
+}
+
+function giveItem(car){
+
+ 
+  const pool=[
+  "boost",
+  "spin",
+  "banana",
+  "rocket",
+  "explosion"
+];
+
+  car.item=
+  pool[Math.floor(Math.random()*pool.length)];
+
+  if(car.isPlayer){
+    playerItem=car.item;
+  }
+}
+c.addEventListener("touchstart", e=>{
+  let t = e.touches[0];
+  const rect = c.getBoundingClientRect();
+
+  touchTarget = {
+    x: t.clientX - rect.left,
+    y: t.clientY - rect.top
+  };
+});
+class Explosion{
+
+  constructor(x,y){
+    this.x=x;
+    this.y=y;
+    this.life=30;
+  }
+
+  update(){
+    this.life--;
+  }
+
+  draw(){
+
+    ctx.beginPath();
+
+    ctx.arc(
+      this.x,
+      this.y,
+      40-this.life,
+      0,
+      Math.PI*2
+    );
+
+    ctx.strokeStyle="orange";
+    ctx.lineWidth=4;
+    ctx.stroke();
+  }
+}
+class Banana{
+
+  constructor(x,y){
+    this.x=x;
+    this.y=y;
+  }
+
+  draw(){
+
+    ctx.fillStyle="yellow";
+
+    ctx.beginPath();
+
+    ctx.arc(this.x,this.y,8,0,Math.PI*2);
+
+    ctx.fill();
+  }
+
+  check(car){
+
+    let d=Math.hypot(car.x-this.x,car.y-this.y);
+
+    if(d<18){
+
+      car.spin=1;
+
+      explosions.push(
+        new Explosion(this.x,this.y)
+      );
+
+      return true;
+    }
+
+    return false;
+  }
+}
+class Rocket{
+
+  constructor(owner){
+
+    this.x=owner.x;
+    this.y=owner.y;
+
+    this.angle=owner.angle;
+
+    this.owner=owner;
+
+    this.dead=false;
+  }
+
+  update(){
+
+    this.x+=Math.cos(this.angle)*8;
+    this.y+=Math.sin(this.angle)*8;
+
+    cars.forEach(c=>{
+
+      if(c===this.owner) return;
+
+      let d=Math.hypot(c.x-this.x,c.y-this.y);
+
+      if(d<20){
+
+        c.spin=1.5;
+
+        explosions.push(
+          new Explosion(this.x,this.y)
+        );
+
+        this.dead=true;
+      }
+    });
+  }
+
+  draw(){
+
+    ctx.save();
+
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
+
+    ctx.fillStyle="red";
+
+    ctx.fillRect(-10,-4,20,8);
 
     ctx.restore();
   }
 }
+c.addEventListener("touchmove", e=>{
+  e.preventDefault();
 
+  let t = e.touches[0];
+  const rect = c.getBoundingClientRect();
+
+  touchTarget = {
+    x: t.clientX - rect.left,
+    y: t.clientY - rect.top
+  };
+});
+
+function showSettings(){
+  menu.style.display = "none";
+  ui.style.display = "block";
+}
 // ================= TRACK HELP =================
 function closest(x,y){
 
@@ -219,18 +622,64 @@ function project(px,py,a,b){
 let cars=[];
 let maxLaps=5;
 let running=false;
+let touchTarget = null;
+let items = [];
+let playerItem = null;
+let bananas = [];
+let rockets = [];
+let explosions = [];
 
-function start(){
 
-  cars=[];
-  let n=+document.getElementById("bots").value;
-  maxLaps=+document.getElementById("laps").value;
+function startRace(){
 
-  for(let i=0;i<n;i++){
-    cars.push(new Car(i,"Bot "+(i+1)));
-  }
+cars=[];
 
-  running=true;
+let n=+document.getElementById("bots").value;
+
+maxLaps=+document.getElementById("laps").value;
+
+let playerName=
+document.getElementById("playerName").value || "Player";
+
+// SPIELER
+let player=new Car(0,playerName,0.65);
+
+player.isPlayer=true;
+
+cars.push(player);
+
+// BOTS
+for(let i=1;i<n;i++){
+
+cars.push(
+new Car(i,"Bot "+i,0.65)
+);
+
+}
+
+items=[];
+
+for(let i=0;i<8;i++){
+
+  let p=
+  track[Math.floor(Math.random()*track.length)];
+
+  items.push(
+
+    new ItemBox(
+
+      p.x+(Math.random()-0.5)*120,
+      p.y+(Math.random()-0.5)*120
+    )
+  );
+}
+
+running=false;
+
+countdown(()=>{
+running=true;
+});
+
 }
 
 // ================= DRAW TRACK =================
@@ -256,26 +705,67 @@ function drawTrack(){
   ctx.setLineDash([]);
 
   // checkpoints sichtbar
-  ctx.fillStyle="yellow";
-  track.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,6,0,Math.PI*2);
-    ctx.fill();
-  });
+  // checkpoints als LINIE (Gates)
+ctx.strokeStyle = "yellow";
+ctx.lineWidth = 4;
+
+for (let i = 0; i < track.length; i++) {
+
+  let a = track[i];
+  let b = track[(i + 1) % track.length];
+
+  // Mittelpunkt zwischen zwei Punkten = Checkpoint-Position
+  let mx = (a.x + b.x) / 2;
+  let my = (a.y + b.y) / 2;
+
+  // Richtung der Strecke
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+
+  // Normale (90° gedreht) → damit Linie quer zur Strecke steht
+  let len = Math.hypot(dx, dy) || 1;
+  dx /= len;
+  dy /= len;
+
+  let nx = -dy;
+  let ny = dx;
+
+  let size = 80; // Länge der Checkpoint-Linie
+
+  ctx.beginPath();
+  ctx.moveTo(mx - nx * size, my - ny * size);
+  ctx.lineTo(mx + nx * size, my + ny * size);
+  ctx.stroke();
+}
 }
 
 // ================= SCORE (FIXED!) =================
 function score(){
 
-  let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
+  cars.forEach(c=>{
 
-  let html="<h3>🏆 Ranking</h3>";
+    // Zielcheckpoint
+    let target = track[c.cp];
 
-  sorted.forEach((c,i)=>{
-    html+=`${i+1}. ${c.name} | Lap ${c.lap}<br>`;
+    // Distanz zum nächsten Checkpoint
+    let dist = Math.hypot(target.x - c.x, target.y - c.y);
+
+    // Mehr Fortschritt = bessere Position
+    c.progress =
+      c.lap * 100000 +
+      c.cp * 1000 -
+      dist;
   });
 
-  document.getElementById("score").innerHTML=html;
+  let sorted = [...cars].sort((a,b)=>b.progress-a.progress);
+
+  let html = "<h3>🏆 Live Ranking</h3>";
+
+  sorted.forEach((c,i)=>{
+    html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
+  });
+
+  document.getElementById("score").innerHTML = html;
 }
 
 // ================= LOOP =================
@@ -284,12 +774,41 @@ function loop(){
   ctx.clearRect(0,0,c.width,c.height);
 
   drawTrack();
+bananas.forEach(b=>{
+  b.draw();
+});
+
+rockets.forEach(r=>{
+  r.update();
+  r.draw();
+});
+
+rockets=
+rockets.filter(r=>!r.dead);
+
+explosions.forEach(e=>{
+  e.update();
+  e.draw();
+});
+
+explosions=
+explosions.filter(e=>e.life>0);
+
+  items.forEach(i=>{
+    i.update();
+    i.draw();
+  });
+  bananas=
+  bananas.filter(b=>!b.check(c));
 
   let done=true;
 
   cars.forEach(c=>{
     if(running)c.update();
     c.draw();
+    items.forEach(i=>{
+    i.check(c);
+  });
     if(!c.finished)done=false;
   });
 
@@ -306,9 +825,92 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
+function countdown(cb){
+
+  let el=document.createElement("div");
+  el.style.position="absolute";
+  el.style.top="50%";
+  el.style.left="50%";
+  el.style.transform="translate(-50%,-50%)";
+  el.style.fontSize="80px";
+  el.style.color="white";
+  document.body.appendChild(el);
+
+  let n=3;
+
+  let int=setInterval(()=>{
+
+    if(n===0){
+      el.innerText="GO!";
+      setTimeout(()=>{
+        el.remove();
+        clearInterval(int);
+        cb();
+      },800);
+      return;
+    }
+
+    el.innerText=n;
+    n--;
+
+  },1000);
+}
+window.addEventListener("resize", ()=>{
+  c.width = innerWidth;
+  c.height = innerHeight;
+});
+document
+.getElementById("useItemBtn")
+.onclick=()=>{
+
+  let player=
+  cars.find(c=>c.isPlayer);
+
+  if(!player || !player.item) return;
+
+  if(player.item==="boost"){
+
+    player.speed+=5;
+  }
+
+  if(player.item==="spin"){
+
+    cars.forEach(o=>{
+
+      if(o===player) return;
+
+      let d=Math.hypot(
+        o.x-player.x,
+        o.y-player.y
+      );
+
+      if(d<120){
+        o.spin=1;
+      }
+    });
+  }
+
+  if(player.item==="banana"){
+
+    bananas.push(
+      new Banana(player.x,player.y)
+    );
+  }
+
+  if(player.item==="rocket"){
+
+    rockets.push(
+      new Rocket(player)
+    );
+  }
+
+  player.item=null;
+  playerItem=null;
+};
+
 loop();
 
 </script>
 
 </body>
-</html>   Bau es in diesem code ein
+</html>   
