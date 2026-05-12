@@ -72,6 +72,7 @@ Spielername:
   <button onclick="showSettings()">▶ Start Game</button>
   <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
+  <button onclick="toggleItems(event)">🎁 Items: ON</button>
 </div>
   
 <canvas id="c"></canvas>
@@ -82,6 +83,7 @@ const c=document.getElementById("c");
 const ctx=c.getContext("2d");
 let menu = document.getElementById("menu");
 let ui = document.getElementById("ui");
+let itemsEnabled = true;
 
 c.width=innerWidth;
 c.height=innerHeight;
@@ -657,9 +659,21 @@ new Car(i,"Bot "+i,0.65)
 
 }
 
-items=[];
+items = [];
 
-for(let i=0;i<8;i++){
+if(itemsEnabled){
+  for(let i=0;i<8;i++){
+
+    let p = track[Math.floor(Math.random()*track.length)];
+
+    items.push(
+      new ItemBox(
+        p.x + (Math.random()-0.5)*120,
+        p.y + (Math.random()-0.5)*120
+      )
+    );
+  }
+}
 
   let p=
   track[Math.floor(Math.random()*track.length)];
@@ -794,10 +808,12 @@ explosions.forEach(e=>{
 explosions=
 explosions.filter(e=>e.life>0);
 
+  if(itemsEnabled){
   items.forEach(i=>{
     i.update();
     i.draw();
   });
+}
   bananas=
   bananas.filter(b=>!b.check(c));
 
@@ -806,9 +822,11 @@ explosions.filter(e=>e.life>0);
   cars.forEach(c=>{
     if(running)c.update();
     c.draw();
-    items.forEach(i=>{
+    if(itemsEnabled){
+  items.forEach(i=>{
     i.check(c);
   });
+}
     if(!c.finished)done=false;
   });
 
@@ -823,6 +841,13 @@ explosions.filter(e=>e.life>0);
   score();
 
   requestAnimationFrame(loop);
+}
+function toggleItems(e){
+
+  itemsEnabled = !itemsEnabled;
+
+  e.target.innerText =
+    itemsEnabled ? "🎁 Items: ON" : "🎁 Items: OFF";
 }
 
 function countdown(cb){
