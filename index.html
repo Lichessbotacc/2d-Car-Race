@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Racing Arena Fixed</title>
+<title>Racing Arena FIX</title>
 
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
@@ -12,7 +12,7 @@ canvas{display:block;}
 position:absolute;top:10px;left:10px;
 background:rgba(0,0,0,0.75);
 padding:12px;border-radius:10px;
-width:260px;color:white;
+width:240px;color:white;
 }
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
@@ -23,16 +23,12 @@ button{background:#00c27a;color:white;font-weight:bold;}
 <body>
 
 <div id="ui">
-<h3>🏁 Racing Arena</h3>
-
+<h3>🏁 Racing</h3>
 Bots:
-<input id="bots" type="number" value="6">
-
+<input id="bots" type="number" value="5">
 Runden:
-<input id="laps" type="number" value="5">
-
+<input id="laps" type="number" value="3">
 <button onclick="start()">START</button>
-
 <div id="score"></div>
 </div>
 
@@ -49,20 +45,21 @@ c.height=innerHeight;
 const cx=c.width/2;
 const cy=c.height/2;
 
-// ================= TRACK (mehrere Checkpoints!) =================
+// ================= TRACK =================
 const track=[
-  {x:cx+300,y:cy},
-  {x:cx+200,y:cy-200},
-  {x:cx-100,y:cy-220},
-  {x:cx-300,y:cy-50},
-  {x:cx-200,y:cy+200},
-  {x:cx+100,y:cy+220}
+  {x:cx+250,y:cy},
+  {x:cx+150,y:cy-180},
+  {x:cx-150,y:cy-180},
+  {x:cx-250,y:cy},
+  {x:cx-150,y:cy+180},
+  {x:cx+150,y:cy+180}
 ];
 
 const trackWidth=70;
 
 // ================= CAR =================
 class Car{
+
   constructor(i,name){
 
     this.name=name;
@@ -78,10 +75,9 @@ class Car{
     this.speed=2;
     this.targetSpeed=2;
 
-    this.color=`hsl(${i*50},80%,60%)`;
+    this.color=`hsl(${i*60},80%,60%)`;
 
     this.finished=false;
-    this.points=0;
 
     setInterval(()=>{
       this.targetSpeed=1+Math.random()*3;
@@ -103,147 +99,55 @@ class Car{
 
     let ang=Math.atan2(dy,dx);
 
-    this.angle += (ang-this.angle)*0.12;
+    this.angle += (ang-this.angle)*0.1;
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
 
-    // Strecke erzwingen
-    let center=closest(this.x,this.y);
-
-    let d=Math.hypot(center.x-this.x,center.y-this.y);
-
-    if(d>trackWidth){
-      this.x += (center.x-this.x)*0.08;
-      this.y += (center.y-this.y)*0.08;
-      this.speed*=0.9;
-    }
-
-    // checkpoint FIX (kein Bug mehr!)
-    if(dist<50){
+    // checkpoint fix
+    if(dist<45){
       this.cp++;
 
       if(this.cp>=track.length){
         this.cp=0;
         this.lap++;
-
-        if(this.lap>=maxLaps){
-          this.finished=true;
-        }
       }
     }
-
-    // collision
-    cars.forEach(o=>{
-      if(o===this) return;
-
-      let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-      if(d<22){
-
-        let push=(22-d)/2;
-
-        let nx=(this.x-o.x)/d;
-        let ny=(this.y-o.y)/d;
-
-        this.x+=nx*push;
-        this.y+=ny*push;
-
-        o.x-=nx*push;
-        o.y-=ny*push;
-
-        this.speed*=0.9;
-      }
-    });
   }
 
   draw(){
 
-  ctx.save();
-  ctx.translate(this.x,this.y);
-  ctx.rotate(this.angle);
+    // AUTO
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
 
-  // Auto
-  ctx.fillStyle=this.color;
-  ctx.fillRect(-10,-6,20,12);
+    ctx.fillStyle=this.color;
+    ctx.fillRect(-10,-6,20,12);
 
-  ctx.fillStyle="#111";
-  ctx.fillRect(-4,-3,8,6);
+    ctx.fillStyle="#111";
+    ctx.fillRect(-4,-3,8,6);
 
-  ctx.restore();
+    ctx.restore();
 
-  // 👇 NAME ÜBER DEM AUTO
-  ctx.fillStyle="white";
-  ctx.font="12px Arial";
-  ctx.textAlign="center";
+    // NAME (WICHTIG FIX: außerhalb transform)
+    ctx.fillStyle="white";
+    ctx.font="12px Arial";
+    ctx.textAlign="center";
 
-  ctx.fillText(
-    this.name,
-    this.x,
-    this.y - 18
-  );
-
-  // optional: Runde anzeigen
-  ctx.fillStyle="rgba(255,255,255,0.7)";
-  ctx.font="10px Arial";
-
-  ctx.fillText(
-    "Lap " + this.lap,
-    this.x,
-    this.y - 6
-  );
-}
-
-// ================= TRACK HELP =================
-function closest(x,y){
-
-  let best=null;
-  let bd=99999;
-
-  for(let i=0;i<track.length;i++){
-
-    let a=track[i];
-    let b=track[(i+1)%track.length];
-
-    let p=project(x,y,a,b);
-
-    let d=Math.hypot(p.x-x,p.y-y);
-
-    if(d<bd){
-      bd=d;
-      best=p;
-    }
+    ctx.fillText(this.name,this.x,this.y-18);
   }
-
-  return best;
-}
-
-function project(px,py,a,b){
-
-  let vx=b.x-a.x;
-  let vy=b.y-a.y;
-
-  let wx=px-a.x;
-  let wy=py-a.y;
-
-  let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
-
-  t=Math.max(0,Math.min(1,t));
-
-  return{
-    x:a.x+vx*t,
-    y:a.y+vy*t
-  };
 }
 
 // ================= GAME =================
 let cars=[];
-let maxLaps=5;
 let running=false;
+let maxLaps=3;
 
 function start(){
 
   cars=[];
+
   let n=+document.getElementById("bots").value;
   maxLaps=+document.getElementById("laps").value;
 
@@ -275,24 +179,16 @@ function drawTrack(){
   ctx.setLineDash([10,10]);
   ctx.stroke();
   ctx.setLineDash([]);
-
-  // checkpoints sichtbar
-  ctx.fillStyle="yellow";
-  track.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,6,0,Math.PI*2);
-    ctx.fill();
-  });
 }
 
-// ================= SCORE (FIXED!) =================
+// ================= SCORE =================
 function score(){
 
-  let sorted=[...cars].sort((a,b)=>b.lap-a.lap);
+  let html="<h3>🏆</h3>";
 
-  let html="<h3>🏆 Ranking</h3>";
-
-  sorted.forEach((c,i)=>{
+  cars
+  .sort((a,b)=>b.lap-a.lap)
+  .forEach((c,i)=>{
     html+=`${i+1}. ${c.name} | Lap ${c.lap}<br>`;
   });
 
@@ -306,21 +202,10 @@ function loop(){
 
   drawTrack();
 
-  let done=true;
-
   cars.forEach(c=>{
     if(running)c.update();
     c.draw();
-    if(!c.finished)done=false;
   });
-
-  if(running && done){
-    running=false;
-
-    cars.forEach((c,i)=>{
-      c.points += [10,7,5,3,1][i] || 1;
-    });
-  }
 
   score();
 
