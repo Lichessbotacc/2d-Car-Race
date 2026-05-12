@@ -96,13 +96,36 @@ class Car{
 
     let skillFactor = this.skill;
 
+    if(Math.random()<(1-this.skill)*0.002){
+      this.spin=1;
+    }
+
+    if(this.spin>0){
+      this.angle+=0.3;
+      this.speed*=0.4;
+      this.spin-=0.02;
+    }
+
     // bessere Bots sind stabiler
     this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
 
-    let t = {
-      x: track[this.cp].x + (Math.random()-0.5) * (1 - this.skill) * 30,
-      y: track[this.cp].y + (Math.random()-0.5) * (1 - this.skill) * 30
+    let error=(1-this.skill)*40;
+
+    let target={
+      x:track[this.cp].x+(Math.random()-0.5)*error,
+      y:track[this.cp].y+(Math.random()-0.5)*error
     };
+
+    cars.forEach(o=>{
+      if(o===this) return;
+
+      let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+      if(d<60 && o.speed<this.speed){
+        target.x += (this.x-o.x)*0.2;
+        target.y += (this.y-o.y)*0.2;
+      }
+    });
 
     let dx=t.x-this.x;
     let dy=t.y-this.y;
@@ -233,7 +256,7 @@ let cars=[];
 let maxLaps=5;
 let running=false;
 
-function start(){
+function startRace(){
 
   cars=[];
   let n=+document.getElementById("bots").value;
@@ -241,14 +264,16 @@ function start(){
 
   for(let i=0;i<n;i++){
 
-    // Skill verteilt: erste besser, letzte schlechter
-    let skill = 1 - (i / Math.max(1,n-1));  
-    skill = 0.3 + skill * 0.7;
+    let skill=0.3+(1-(i/(n-1)))*0.7;
 
     cars.push(new Car(i,"Bot "+(i+1),skill));
   }
 
-  running=true;
+  running=false;
+
+  countdown(()=>{
+    running=true;
+  });
 }
 
 // ================= DRAW TRACK =================
