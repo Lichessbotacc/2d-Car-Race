@@ -314,20 +314,30 @@ function drawTrack(){
 // ================= SCORE (FIXED!) =================
 function score(){
 
-  // Fortschritt = Runden + Checkpoints
   cars.forEach(c=>{
-    c.progress = c.lap * 1000 + c.cp;
+
+    // Zielcheckpoint
+    let target = track[c.cp];
+
+    // Distanz zum nächsten Checkpoint
+    let dist = Math.hypot(target.x - c.x, target.y - c.y);
+
+    // Mehr Fortschritt = bessere Position
+    c.progress =
+      c.lap * 100000 +
+      c.cp * 1000 -
+      dist;
   });
 
-  let sorted=[...cars].sort((a,b)=>b.progress-a.progress);
+  let sorted = [...cars].sort((a,b)=>b.progress-a.progress);
 
-  let html="<h3>🏆 Live Ranking</h3>";
+  let html = "<h3>🏆 Live Ranking</h3>";
 
   sorted.forEach((c,i)=>{
-    html+=`${i+1}. ${c.name} | Lap ${c.lap}<br>`;
+    html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
   });
 
-  document.getElementById("score").innerHTML=html;
+  document.getElementById("score").innerHTML = html;
 }
 
 // ================= LOOP =================
