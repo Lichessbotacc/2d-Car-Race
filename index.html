@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Racing Arena Fixed + Steering</title>
+<title>Racing Arena Fixed</title>
 
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
@@ -25,7 +26,7 @@ button{background:#00c27a;color:white;font-weight:bold;}
 
 #score{margin-top:10px;font-size:13px;}
 
-/* ===== LENKRAD ===== */
+/* LENKRAD */
 #wheel{
 position:absolute;
 right:40px;
@@ -46,7 +47,7 @@ width:6px;
 height:40px;
 background:red;
 transform-origin:bottom center;
-transform:translate(-50%,-100%) rotate(0deg);
+transform:translate(-50%,-100%);
 border-radius:3px;
 }
 </style>
@@ -97,33 +98,103 @@ const track=[
 
 const trackWidth=70;
 
-// ================= PLAYER STEERING =================
+// ================= LENKRAD =================
 let steer=0;
+let dragging=false;
 
 const wheel=document.getElementById("wheel");
 const indicator=document.getElementById("indicator");
 
-function setSteer(e){
+wheel.addEventListener("pointerdown",(e)=>{
+  dragging=true;
+  wheel.setPointerCapture(e.pointerId);
+  updateSteer(e);
+});
+
+wheel.addEventListener("pointerup",()=>{
+  dragging=false;
+  steer*=0.2;
+});
+
+wheel.addEventListener("pointermove",(e)=>{
+  if(!dragging) return;
+  updateSteer(e);
+});
+
+function updateSteer(e){
   const rect=wheel.getBoundingClientRect();
   const x=e.clientX-rect.left-rect.width/2;
-  const y=e.clientY-rect.top-rect.height/2;
 
   steer=Math.max(-1,Math.min(1,x/60));
 
-  indicator.style.transform=`translate(-50%,-100%) rotate(${steer*120}deg)`;
+  indicator.style.transform=
+    `translate(-50%,-100%) rotate(${steer*120}deg)`;
 }
 
-wheel.addEventListener("pointerdown",()=>wheel.setPointerCapture(event.pointerId));
-wheel.addEventListener("pointermove",(e)=>{
-  if(e.pressure>0 || e.buttons>0) setSteer(e);
-});
+// ================= TRACK HELP =================
+function closest(x,y){
+
+  let best=null;
+  let bd=99999;
+
+  for(let i=0;i<track.length;i++){
+
+    let a=track[i];
+    let b=track[(i+1)%track.length];
+
+    let p=project(x,y,a,b);
+
+    let d=Math.hypot(p.x-x,p.y-y);
+
+    if(d<bd){
+      bd=d;
+      best=p;
+    }
+  }
+
+  return best;
+}
+
+function project(px,py,a,b){
+
+  let vx=b.x-a.x;
+  let vy=b.y-a.y;
+
+  let wx=px-a.x;
+  let wy=py-a.y;
+
+  let t=(wx*vx+wy*vy)/(vx*vx+vy*vy);
+
+  t=Math.max(0,Math.min(1,t));
+
+  return{
+    x:a.x+vx*t,
+    y:a.y+vy*t
+  };
+}
+
+// ================= PHYSICS =================
+function keepOnTrack(car){
+
+  let center=closest(car.x,car.y);
+
+  let dx=center.x-car.x;
+  let dy=center.y-car.y;
+
+  let dist=Math.hypot(dx,dy);
+
+  if(dist>trackWidth){
+    car.x+=dx*0.08;
+    car.y+=dy*0.08;
+    car.speed*=0.92;
+  }
+}
 
 // ================= CAR =================
 class Car{
+
   constructor(i,name){
-
     this.name=name;
-
     this.x=track[0].x;
     this.y=track[0].y;
 
@@ -136,8 +207,6 @@ class Car{
     this.color=`hsl(${i*50},80%,60%)`;
 
     this.finished=false;
-
-    this.wander=Math.random()*2-1;
   }
 
   update(){
@@ -146,10 +215,10 @@ class Car{
 
     let target=track[this.cp];
 
-    // 🔥 BOT RANDOMNESS (nicht mehr rail-like)
+    // leichte Randomness für Bots
     target={
-      x:target.x+(Math.random()-0.5)*40,
-      y:target.y+(Math.random()-0.5)*40
+      x:target.x+(Math.random()-0.5)*35,
+      y:target.y+(Math.random()-0.5)*35
     };
 
     let dx=target.x-this.x;
@@ -157,12 +226,17 @@ class Car{
 
     let ang=Math.atan2(dy,dx);
 
-    this.angle += (ang-this.angle)*0.08;
+    let diff=ang-this.angle;
+    diff=Math.atan2(Math.sin(diff),Math.cos(diff));
 
-    this.speed=2.5+Math.random()*1.2;
+    this.angle+=diff*0.05;
+
+    this.speed=2.8;
 
     this.x+=Math.cos(this.angle)*this.speed;
     this.y+=Math.sin(this.angle)*this.speed;
+
+    keepOnTrack(this);
 
     let dist=Math.hypot(dx,dy);
 
@@ -174,21 +248,6 @@ class Car{
         if(this.lap>=maxLaps) this.finished=true;
       }
     }
-
-    // collision
-    cars.forEach(o=>{
-      if(o===this) return;
-      let d=Math.hypot(o.x-this.x,o.y-this.y);
-      if(d<22){
-        let push=(22-d)/2;
-        let nx=(this.x-o.x)/d;
-        let ny=(this.y-o.y)/d;
-        this.x+=nx*push;
-        this.y+=ny*push;
-        o.x-=nx*push;
-        o.y-=ny*push;
-      }
-    });
   }
 
   draw(){
@@ -203,8 +262,9 @@ class Car{
   }
 }
 
-// ================= PLAYER CAR =================
+// ================= PLAYER =================
 class Player extends Car{
+
   constructor(){
     super(999,"You");
     this.color="white";
@@ -212,14 +272,16 @@ class Player extends Car{
 
   update(){
 
-    let targetAngle=this.angle+steer*0.08;
+    let targetAngle=this.angle+steer*0.1;
 
-    this.angle += (targetAngle-this.angle)*0.2;
+    this.angle+= (targetAngle-this.angle)*0.2;
 
     this.speed=3;
 
     this.x+=Math.cos(this.angle)*this.speed;
     this.y+=Math.sin(this.angle)*this.speed;
+
+    keepOnTrack(this);
   }
 }
 
@@ -245,7 +307,7 @@ function start(){
   running=true;
 }
 
-// ================= TRACK =================
+// ================= TRACK DRAW =================
 function drawTrack(){
 
   ctx.strokeStyle="#555";
@@ -253,19 +315,21 @@ function drawTrack(){
 
   ctx.beginPath();
   ctx.moveTo(track[0].x,track[0].y);
+
   for(let p of track) ctx.lineTo(p.x,p.y);
+
   ctx.closePath();
   ctx.stroke();
 
-  // finish line (START POSITION FIX 🚩)
-  let a=track[track.length-1];
-  let b=track[0];
+  // Ziellinie (fix am Startpunkt)
+  let start=track[0];
 
   ctx.strokeStyle="white";
   ctx.lineWidth=5;
+
   ctx.beginPath();
-  ctx.moveTo(b.x-30,b.y-30);
-  ctx.lineTo(b.x+30,b.y+30);
+  ctx.moveTo(start.x-25,start.y-25);
+  ctx.lineTo(start.x+25,start.y+25);
   ctx.stroke();
 
   // checkpoints
