@@ -844,8 +844,13 @@ explosions.filter(e=>e.life>0);
     i.update();
     i.draw();
   });
-  bananas=
-  bananas.filter(b=>!b.check(c));
+  cars.forEach(car=>{
+
+  bananas = bananas.filter(
+    b => !b.check(car)
+  );
+
+});
 
   let done=true;
 
