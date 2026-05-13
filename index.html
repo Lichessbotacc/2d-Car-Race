@@ -377,9 +377,9 @@ if(this.style === "safe"){
 }
 
 if(this.style === "random"){
-  baseTurn *= 1.0 + (
-    Math.sin(Date.now()*0.002 + this.name.length) * 0.2
-  );
+  offset =
+    Math.sin(Date.now()*0.002 + this.name.length)
+    * 80;
 }
 
 let target = {
