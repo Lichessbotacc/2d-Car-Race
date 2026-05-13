@@ -852,6 +852,15 @@ for (let i = 1; i < n; i++) {
 }
   countdown(() => {
   running = true;
+
+  // FORCE RESET: verhindert "stehenbleiben"
+  cars.forEach(c => {
+    let dx = track[1].x - track[0].x;
+    let dy = track[1].y - track[0].y;
+
+    c.angle = Math.atan2(dy, dx);
+    c.speed = c.targetSpeed || 3;
+  });
 });
 }
 
