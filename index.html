@@ -358,9 +358,10 @@ this.y =
         this.cp=0;
         this.lap++;
 
-        if(this.lap>=maxLaps){
-          this.finished=true;
-        }
+        if(this.lap >= maxLaps && !this.finished){
+          this.finished = true;
+          this.finishTime = performance.now();
+}
       }
     }
 
@@ -801,7 +802,17 @@ function score(){
       dist;
   });
 
-  let sorted = [...cars].sort((a,b)=>b.progress-a.progress);
+  let sorted = [...cars].sort((a,b)=>{
+
+  if(a.finished && !b.finished) return -1;
+  if(!a.finished && b.finished) return 1;
+
+  if(a.finished && b.finished){
+    return a.finishTime - b.finishTime;
+  }
+
+  return b.progress - a.progress;
+});
 
   let html = "<h3>🏆 Live Ranking</h3>";
 
