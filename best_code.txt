@@ -109,26 +109,37 @@ class Car{
 
     this.name=name;
 
-    let dx = track[1].x - track[0].x;
-    let dy = track[1].y - track[0].y;
+    // Richtung der Strecke
+let dx = track[1].x - track[0].x;
+let dy = track[1].y - track[0].y;
 
-    this.angle = Math.atan2(dy, dx);
+this.angle = Math.atan2(dy, dx);
 
-    this.x =
-    track[0].x
-    - Math.cos(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
-    - Math.cos(this.angle) * i * 35;
+// Normale der Strecke
+let len = Math.hypot(dx, dy);
+let nx = -dy / len;
+let ny = dx / len;
 
-    this.y =
-    track[0].y
-    - Math.sin(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
-    - Math.sin(this.angle) * i * 35;
+// Startposition sauber auf der Strecke
+let row = Math.floor(i / 2);
+let side = (i % 2 === 0 ? -1 : 1);
+
+this.x =
+  track[0].x
+  - dx / len * row * 40
+  + nx * side * 20;
+
+this.y =
+  track[0].y
+  - dy / len * row * 40
+  + ny * side * 20;
 
     this.cp=1;
     this.lap=0;
 
-    this.speed=2;
-    this.targetSpeed=2;
+    this.speed=3;
+    this.targetSpeed=3;
+    this.boostTimer=0;
 
     this.color=`hsl(${i*50},80%,60%)`;
 
@@ -137,9 +148,7 @@ class Car{
     this.spin = 0;
     this.isPlayer = false;
 
-    setInterval(()=>{
-      this.targetSpeed=1+Math.random()*3;
-    },1000);
+    
   }
 
   update(){
@@ -180,7 +189,15 @@ class Car{
         this.angle += diff * 0.12;
       }
 
-      this.speed += (this.targetSpeed - this.speed) * 0.05;
+      if(this.boostTimer>0){
+
+        this.speed=6;
+        this.boostTimer--;
+
+        }else{
+
+        this.speed=this.targetSpeed;
+        }
 
       this.x += Math.cos(this.angle) * this.speed;
       this.y += Math.sin(this.angle) * this.speed;
@@ -202,7 +219,7 @@ class Car{
         target.y - this.y
       );
 
-      if(dist < 50){
+      if(dist < 90){
 
         this.cp++;
 
@@ -258,13 +275,25 @@ class Car{
     }
 
     // bessere Bots sind stabiler
-    this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
+    if(this.boostTimer>0){
+
+        this.speed=6;
+        this.boostTimer--;
+
+        }else{
+
+        this.speed=this.targetSpeed;
+        }
 
     let error=(1-this.skill)*40;
 
-    let target={
-      x:track[this.cp].x+(Math.random()-0.5)*error,
-      y:track[this.cp].y+(Math.random()-0.5)*error
+    let next = track[this.cp];
+    let after = track[(this.cp + 1) % track.length];
+
+    // Ziel = Mischung aus aktuellem + nächstem Checkpoint
+    let target = {
+      x: next.x * 0.7 + after.x * 0.3,
+      y: next.y * 0.7 + after.y * 0.3
     };
 
     cars.forEach(o=>{
@@ -307,7 +336,7 @@ class Car{
     }
 
     // checkpoint FIX (kein Bug mehr!)
-    if(dist<50){
+    if(dist < 90){
       this.cp++;
 
       if(this.cp>=track.length){
@@ -870,7 +899,7 @@ document
 
   if(player.item==="boost"){
 
-    player.speed+=5;
+    player.boostTimer=60;
   }
 
   if(player.item==="spin"){
