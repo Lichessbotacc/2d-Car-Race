@@ -175,11 +175,11 @@ const trackWidth=70;
 
 // ================= CAR =================
 class Car{
-  constructor(i,name,skill=1){
+  constructor(i,name,skill=1,type="middle"){
 
   this.skill = skill;
-
-    this.name=name;
+  this.type = type;
+  this.name=name;
 
     // Richtung der Strecke
 let dx = track[1].x - track[0].x;
@@ -366,7 +366,19 @@ let sideX = -dirY;
 let sideY = dirX;
 
 // Jeder Bot fährt leicht anders
-let offset = Math.sin(Date.now()*0.001 + this.name.length*3) * 60;
+let offset = 0;
+
+if(this.type === "weak"){
+  offset = Math.sin(Date.now()*0.003 + this.id) * 80;
+}
+
+if(this.type === "middle"){
+  offset = Math.sin(Date.now()*0.002 + this.id) * 40;
+}
+
+if(this.type === "hard"){
+  offset = Math.sin(Date.now()*0.0015 + this.id) * 15;
+}
 
 let target = {
 
@@ -399,12 +411,29 @@ let target = {
 
     let ang=Math.atan2(dy,dx);
 
+    let skillMultiplier = 1;
+let error = 0;
+
+if(this.type === "weak"){
+  skillMultiplier = 0.7;
+  error = 25;
+}
+
+if(this.type === "middle"){
+  skillMultiplier = 1.0;
+  error = 12;
+}
+
+if(this.type === "hard"){
+  skillMultiplier = 1.25;
+  error = 4;
+}
     let turnSpeed = 0.05 + this.skill * 0.1;
 
     let diff = ang - this.angle;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-    this.angle += diff * turnSpeed;
+    this.angle += diff * turnSpeed * skillMultiplier;
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
@@ -764,6 +793,7 @@ function project(px,py,a,b){
 let cars=[];
 let maxLaps=5;
 let running=false;
+const botTypes = ["weak", "middle", "hard"];
 let touchTarget = null;
 let items = [];
 let playerItem = null;
@@ -795,8 +825,10 @@ cars.push(player);
 // BOTS
 for(let i=1;i<n;i++){
 
+let type = botTypes[Math.floor(Math.random() * botTypes.length)];
+
 cars.push(
-new Car(i,"Bot "+i,0.65)
+  new Car(i, "Bot " + i, 0.65, type)
 );
 
 }
