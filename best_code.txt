@@ -152,20 +152,31 @@ const tracks = [
     {x:cx-350,y:cy+300}
   ],
 
-    // ================= LEVEL 3 (WILD CHAOS TRACK) =================
-  [
-    {x:cx-550,y:cy},
-    {x:cx-350,y:cy-350},
-    {x:cx,y:cy-120},
-    {x:cx+300,y:cy-420},
-    {x:cx+550,y:cy-50},
-    {x:cx+250,y:cy+120},
-    {x:cx+500,y:cy+420},
-    {x:cx,y:cy+250},
-    {x:cx-250,y:cy+500},
-    {x:cx-500,y:cy+180},
-    {x:cx-150,y:cy}
-  ]
+  // ================= LEVEL 3 (LONG & NARROW) =================
+[
+  {x:cx-650,y:cy},
+
+  {x:cx-500,y:cy-200},
+  {x:cx-350,y:cy-350},
+  {x:cx-200,y:cy-200},
+
+  {x:cx-50,y:cy},
+  {x:cx+100,y:cy+150},
+  {x:cx+250,y:cy+300},
+  {x:cx+400,y:cy+150},
+
+  {x:cx+550,y:cy},
+  {x:cx+450,y:cy-200},
+  {x:cx+300,y:cy-350},
+  {x:cx+150,y:cy-200},
+
+  {x:cx,y:cy},
+  {x:cx-150,y:cy+200},
+  {x:cx-300,y:cy+350},
+  {x:cx-450,y:cy+200},
+
+  {x:cx-600,y:cy}
+]
 
 ];
 
@@ -175,11 +186,12 @@ const trackWidth=70;
 
 // ================= CAR =================
 class Car{
-  constructor(i,name,skill=1){
+  constructor(i,name,skill=1,type="middle"){
 
   this.skill = skill;
-
-    this.name=name;
+  this.type = type;
+  this.name=name;
+  this.id = i;
 
     // Richtung der Strecke
 let dx = track[1].x - track[0].x;
@@ -366,7 +378,19 @@ let sideX = -dirY;
 let sideY = dirX;
 
 // Jeder Bot fährt leicht anders
-let offset = Math.sin(Date.now()*0.001 + this.name.length*3) * 60;
+let offset = 0;
+
+if(this.type === "weak"){
+  offset = Math.sin(Date.now()*0.003 + this.id) * 80;
+}
+
+if(this.type === "middle"){
+  offset = Math.sin(Date.now()*0.002 + this.id) * 40;
+}
+
+if(this.type === "hard"){
+  offset = Math.sin(Date.now()*0.0015 + this.id) * 15;
+}
 
 let target = {
 
@@ -399,6 +423,7 @@ let target = {
 
     let ang=Math.atan2(dy,dx);
 
+    
     let turnSpeed = 0.05 + this.skill * 0.1;
 
     let diff = ang - this.angle;
@@ -473,7 +498,14 @@ let target = {
     ctx.fillStyle="white";
     ctx.font="12px Arial";
     ctx.textAlign="center";
-    ctx.fillText(this.name, this.x, this.y - 15);
+    let levelText = "";
+
+if(this.type === "weak") levelText = "LVL 1";
+if(this.type === "middle") levelText = "LVL 2";
+if(this.type === "hard") levelText = "LVL 3";
+
+// Name + Level anzeigen
+ctx.fillText(`${this.name} (${levelText})`, this.x, this.y - 15);
   }
 }
 class ItemBox{
@@ -687,23 +719,21 @@ c.addEventListener("touchmove", e=>{
 });
 
 function showLevelMenu(){
-
   menu.style.display = "none";
-
-  document.getElementById("levelMenu")
-  .style.display = "flex";
+  ui.style.display = "none";   // 🔥 WICHTIG
+  document.getElementById("levelMenu").style.display = "flex";
 }
 
 function selectLevel(i){
 
   currentTrackIndex = i;
-
   track = tracks[currentTrackIndex];
 
-  document.getElementById("levelMenu")
-  .style.display = "none";
-
+  document.getElementById("levelMenu").style.display = "none";
+  menu.style.display = "none";
   ui.style.display = "block";
+
+  startRace(); // 🔥 DAS FEHLT
 }
 
 function backToMenu(){
@@ -764,6 +794,7 @@ function project(px,py,a,b){
 let cars=[];
 let maxLaps=5;
 let running=false;
+const botTypes = ["weak", "middle", "hard"];
 let touchTarget = null;
 let items = [];
 let playerItem = null;
@@ -795,8 +826,10 @@ cars.push(player);
 // BOTS
 for(let i=1;i<n;i++){
 
+let type = botTypes[Math.floor(Math.random() * botTypes.length)];
+
 cars.push(
-new Car(i,"Bot "+i,0.65)
+  new Car(i, "Bot " + i, 0.65, type)
 );
 
 }
@@ -906,8 +939,15 @@ function score(){
   let html = "<h3>🏆 Live Ranking</h3>";
 
   sorted.forEach((c,i)=>{
-    html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
-  });
+
+  let levelText = "";
+
+  if(c.type === "weak") levelText = "LVL 1";
+  if(c.type === "middle") levelText = "LVL 2";
+  if(c.type === "hard") levelText = "LVL 3";
+
+  html += `${i+1}. ${c.name} (${levelText}) | Lap ${c.lap}<br>`;
+});
 
   document.getElementById("score").innerHTML = html;
 }
