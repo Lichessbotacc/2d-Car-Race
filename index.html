@@ -121,18 +121,8 @@ let nx = -dy / len;
 let ny = dx / len;
 
 // Startposition sauber auf der Strecke
-let row = Math.floor(i / 2);
-let side = (i % 2 === 0 ? -1 : 1);
-
-this.x =
-  track[0].x
-  - dx / len * row * 40
-  + nx * side * 20;
-
-this.y =
-  track[0].y
-  - dy / len * row * 40
-  + ny * side * 20;
+this.x = track[0].x;
+this.y = track[0].y;
 
     this.cp=1;
     this.lap=0;
