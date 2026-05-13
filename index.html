@@ -350,36 +350,7 @@ this.y = track[0].y;
     let error=(1-this.skill)*40;
 
     let next = track[this.cp];
-let after = track[(this.cp + 1) % track.length];
-
-// Ziel = Mischung aus aktuellem + nächstem Checkpoint
-let dirX = after.x - next.x;
-let dirY = after.y - next.y;
-
-let len = Math.hypot(dirX, dirY) || 1;
-
-dirX /= len;
-dirY /= len;
-
-// Seitliche Richtung
-let sideX = -dirY;
-let sideY = dirX;
-
-// Jeder Bot fährt leicht anders
-let offset = Math.sin(Date.now()*0.001 + this.name.length*3) * 60;
-
-let target = {
-
-  x:
-    next.x * 0.7 +
-    after.x * 0.3 +
-    sideX * offset,
-
-  y:
-    next.y * 0.7 +
-    after.y * 0.3 +
-    sideY * offset
-};
+    let after = track[(this.cp + 1) % track.length];
 
     // Ziel = Mischung aus aktuellem + nächstem Checkpoint
     let dirX = after.x - next.x;
