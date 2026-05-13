@@ -865,10 +865,16 @@ running=true;
 
 // ================= DRAW TRACK =================
 function drawTrack(){
-  
+
   ctx.save();
-ctx.translate(cx, cy);
-ctx.scale(trackScale, trackScale);
+
+  // nur ZENTRIEREN (kein Scale hier!)
+  ctx.translate(
+    cx - (trackCenterX()),
+    cy - (trackCenterY())
+  );
+
+  // Strecke
   ctx.strokeStyle="#555";
   ctx.lineWidth=trackWidth*2;
 
@@ -882,67 +888,36 @@ ctx.scale(trackScale, trackScale);
   ctx.closePath();
   ctx.stroke();
 
-  ctx.strokeStyle="white";
-  ctx.lineWidth=2;
-  ctx.setLineDash([10,10]);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Checkpoints
+  ctx.strokeStyle="yellow";
+  ctx.lineWidth=4;
 
-  // checkpoints sichtbar
-  // checkpoints als LINIE (Gates)
-ctx.strokeStyle = "yellow";
-ctx.lineWidth = 4;
+  for (let i = 0; i < track.length; i++) {
 
-for (let i = 0; i < track.length; i++) {
+    let a = track[i];
+    let b = track[(i + 1) % track.length];
 
-  let a = track[i];
-  let b = track[(i + 1) % track.length];
+    let mx = (a.x + b.x) / 2;
+    let my = (a.y + b.y) / 2;
 
-  // Mittelpunkt zwischen zwei Punkten = Checkpoint-Position
-  let mx = (a.x + b.x) / 2;
-  let my = (a.y + b.y) / 2;
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
 
-  // Richtung der Strecke
-  let dx = b.x - a.x;
-  let dy = b.y - a.y;
+    let len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
 
-  // Normale (90° gedreht) → damit Linie quer zur Strecke steht
-  let len = Math.hypot(dx, dy) || 1;
-  dx /= len;
-  dy /= len;
+    let nx = -dy;
+    let ny = dx;
 
-  let nx = -dy;
-  let ny = dx;
+    let size = 80;
 
-  let size = 80; // Länge der Checkpoint-Linie
-
-  ctx.beginPath();
-  ctx.moveTo(mx - nx * size, my - ny * size);
-  ctx.lineTo(mx + nx * size, my + ny * size);
-  ctx.stroke();
-}
-}
-function updateTrackScale(){
-
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-
-  for(let p of track){
-    if(p.x < minX) minX = p.x;
-    if(p.x > maxX) maxX = p.x;
-    if(p.y < minY) minY = p.y;
-    if(p.y > maxY) maxY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(mx - nx * size, my - ny * size);
+    ctx.lineTo(mx + nx * size, my + ny * size);
+    ctx.stroke();
   }
 
-  let width = maxX - minX;
-  let height = maxY - minY;
-
-  let margin = 0.85;
-
-  trackScale = Math.min(
-    (c.width * margin) / width,
-    (c.height * margin) / height
-  );
   ctx.restore();
 }
 
