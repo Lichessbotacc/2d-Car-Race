@@ -88,10 +88,10 @@ c.height=innerHeight;
 
 const cx=c.width/2;
 const cy=c.height/2;
+
 let currentTrackIndex = 0;
 let track;
 
-// ================= TRACK (mehrere Checkpoints!) =================
 const tracks = [
   [
     {x:cx+300,y:cy},
@@ -117,7 +117,9 @@ const tracks = [
     {x:cx-200,y:cy+300},
     {x:cx+200,y:cy+300}
   ]
-]; 
+];
+
+track = tracks[currentTrackIndex]; 
 
 let currentTrackIndex = 0;
 let track = tracks[currentTrackIndex];
