@@ -150,7 +150,8 @@ this.y =
   + ny * side * 20;
 
     this.cp=1;
-    this.lap=0;
+    this.lastLapTime = performance.now();
+    this.bestLapTime = Infinity;
 
     this.speed=3;
     this.targetSpeed=3;
@@ -239,8 +240,24 @@ this.y =
         this.cp++;
 
         if(this.cp >= checkpoints.length){
+
           this.cp = 0;
           this.lap++;
+
+          let now = performance.now();
+          let lapTime = now - this.lastLapTime;
+
+          this.lastLapTime = now;
+
+           // Bestzeit speichern
+           if(lapTime < this.bestLapTime){
+              this.bestLapTime = lapTime;
+             }
+
+  if(this.lap >= maxLaps){
+    this.finished = true;
+  }
+}
 
           if(this.lap >= maxLaps){
             this.finished = true;
@@ -815,6 +832,10 @@ function score(){
 });
 
   let html = "<h3>🏆 Live Ranking</h3>";
+
+  if(c.bestLapTime !== Infinity){
+      html += ` | Best Lap: ${(c.bestLapTime/1000).toFixed(2)}s`;
+    }
 
   sorted.forEach((c,i)=>{
     html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
