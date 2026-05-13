@@ -69,7 +69,7 @@ Spielername:
 <div id="menu">
   <h2>🏁 Racing Arena</h2>
 
-  <button onclick="startGameFromMenu()">▶ Start Game</button>
+  <button onclick="showSettings()">▶ Start Game</button>
   <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
 </div>
@@ -98,21 +98,6 @@ const track=[
   {x:cx-200,y:cy+200},
   {x:cx+100,y:cy+220}
 ];
-const checkpoints=[];
-
-for(let i=0;i<track.length;i++){
-
-  let a=track[i];
-  let b=track[(i+1)%track.length];
-
-  let mx=(a.x+b.x)/2;
-  let my=(a.y+b.y)/2;
-
-  checkpoints.push({
-    x:mx,
-    y:my
-  });
-}
 
 const trackWidth=70;
 
@@ -150,8 +135,7 @@ this.y =
   + ny * side * 20;
 
     this.cp=1;
-    this.lastLapTime = performance.now();
-    this.bestLapTime = Infinity;
+    this.lap=0;
 
     this.speed=3;
     this.targetSpeed=3;
@@ -205,7 +189,15 @@ this.y =
         this.angle += diff * 0.12;
       }
 
-      
+      if(this.boostTimer>0){
+
+        this.speed=6;
+        this.boostTimer--;
+
+        }else{
+
+        this.speed=this.targetSpeed;
+        }
 
       this.x += Math.cos(this.angle) * this.speed;
       this.y += Math.sin(this.angle) * this.speed;
@@ -220,7 +212,7 @@ this.y =
         this.speed *= 0.9;
       }
 
-      let target = checkpoints[this.cp];
+      let target = track[this.cp];
 
       let dist = Math.hypot(
         target.x - this.x,
@@ -231,25 +223,9 @@ this.y =
 
         this.cp++;
 
-        if(this.cp >= checkpoints.length){
-
+        if(this.cp >= track.length){
           this.cp = 0;
           this.lap++;
-
-          let now = performance.now();
-          let lapTime = now - this.lastLapTime;
-
-          this.lastLapTime = now;
-
-           // Bestzeit speichern
-           if(lapTime < this.bestLapTime){
-              this.bestLapTime = lapTime;
-             }
-
-  if(this.lap >= maxLaps){
-    this.finished = true;
-  }
-}
 
           if(this.lap >= maxLaps){
             this.finished = true;
@@ -264,8 +240,8 @@ this.y =
       if(Math.random()<0.01){
 
         if(this.item==="boost"){
-          this.boostTimer = 60;
-          this.item = null;
+          this.speed+=4;
+          this.item=null;
         }
 
        if(this.item==="spin"){
@@ -299,14 +275,15 @@ this.y =
     }
 
     // bessere Bots sind stabiler
-    if(this.boostTimer > 0){
-  this.currentSpeed = 6;
-  this.boostTimer--;
-}else{
-  this.currentSpeed = this.targetSpeed;
-}
+    if(this.boostTimer>0){
 
-this.speed = this.currentSpeed;
+        this.speed=6;
+        this.boostTimer--;
+
+        }else{
+
+        this.speed=this.targetSpeed;
+        }
 
     let error=(1-this.skill)*40;
 
@@ -362,14 +339,13 @@ this.speed = this.currentSpeed;
     if(dist < 90){
       this.cp++;
 
-      if(this.cp >= checkpoints.length){
+      if(this.cp>=track.length){
         this.cp=0;
         this.lap++;
 
-        if(this.lap >= maxLaps && !this.finished){
-          this.finished = true;
-          this.finishTime = performance.now();
-}
+        if(this.lap>=maxLaps){
+          this.finished=true;
+        }
       }
     }
 
@@ -482,7 +458,6 @@ function giveItem(car){
 
   car.item=
   pool[Math.floor(Math.random()*pool.length)];
-  car.itemCooldown = 0;
 
   if(car.isPlayer){
     playerItem=car.item;
@@ -799,7 +774,7 @@ function score(){
   cars.forEach(c=>{
 
     // Zielcheckpoint
-    let target = checkpoints[c.cp];
+    let target = track[c.cp];
 
     // Distanz zum nächsten Checkpoint
     let dist = Math.hypot(target.x - c.x, target.y - c.y);
@@ -811,24 +786,9 @@ function score(){
       dist;
   });
 
-  let sorted = [...cars].sort((a,b)=>{
-
-  if(a.finished && !b.finished) return -1;
-  if(!a.finished && b.finished) return 1;
-
-  if(a.finished && b.finished){
-    return a.finishTime - b.finishTime;
-  }
-
-  return b.progress - a.progress;
-});
+  let sorted = [...cars].sort((a,b)=>b.progress-a.progress);
 
   let html = "<h3>🏆 Live Ranking</h3>";
-
-  let player = cars.find(c => c.isPlayer);
-  if(player && player.bestLapTime !== Infinity){
-  html += ` | Best Lap: ${(sorted[0].bestLapTime/1000).toFixed(2)}s`;
-}
 
   sorted.forEach((c,i)=>{
     html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
@@ -977,13 +937,8 @@ document
   playerItem=null;
 };
 
-
 loop();
-function startGameFromMenu(){
-  menu.style.display = "none";
-  ui.style.display = "block";
-  startRace();
-}
+
 </script>
 
 </body>
