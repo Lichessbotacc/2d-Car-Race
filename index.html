@@ -137,8 +137,8 @@ this.y =
     this.cp=1;
     this.lap=0;
 
-    this.speed=2;
-    this.targetSpeed=2;
+    this.speed=3;
+    this.targetSpeed=3;
 
     this.color=`hsl(${i*50},80%,60%)`;
 
@@ -147,9 +147,7 @@ this.y =
     this.spin = 0;
     this.isPlayer = false;
 
-    setInterval(()=>{
-      this.targetSpeed=1+Math.random()*3;
-    },1000);
+    
   }
 
   update(){
@@ -190,7 +188,7 @@ this.y =
         this.angle += diff * 0.12;
       }
 
-      this.speed += (this.targetSpeed - this.speed) * 0.05;
+      this.speed = this.targetSpeed;
 
       this.x += Math.cos(this.angle) * this.speed;
       this.y += Math.sin(this.angle) * this.speed;
@@ -268,7 +266,7 @@ this.y =
     }
 
     // bessere Bots sind stabiler
-    this.speed += (this.targetSpeed - this.speed) * (0.02 + skillFactor * 0.03);
+    this.speed = this.targetSpeed;
 
     let error=(1-this.skill)*40;
 
