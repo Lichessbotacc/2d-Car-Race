@@ -802,57 +802,50 @@ function startRace(){
 
 track = tracks[currentTrackIndex];
 
-cars=[];
+cars = [];
+items = [];
+bananas = [];
+rockets = [];
+explosions = [];
 
-let n=+document.getElementById("bots").value;
+let n = +document.getElementById("bots").value;
+maxLaps = +document.getElementById("laps").value;
 
-maxLaps=+document.getElementById("laps").value;
-
-let playerName=
+let playerName =
 document.getElementById("playerName").value || "Player";
 
-// SPIELER
-let player=new Car(0,playerName,0.65);
+// STARTRICHTUNG NEU BERECHNEN (WICHTIG!)
+let dx = track[1].x - track[0].x;
+let dy = track[1].y - track[0].y;
 
-player.isPlayer=true;
+// SPIELER
+let player = new Car(0, playerName, 0.65);
+player.isPlayer = true;
+
+// 🔥 WICHTIG: RESET POSITION/ANGLE korrekt
+player.x = track[0].x;
+player.y = track[0].y;
+player.angle = Math.atan2(dy, dx);
+player.cp = 1;
+player.lap = 0;
 
 cars.push(player);
 
 // BOTS
-for(let i=1;i<n;i++){
+for (let i = 1; i < n; i++) {
 
   let styles = ["aggressive", "safe", "random"];
+  let style = styles[Math.floor(Math.random() * styles.length)];
 
-  let style = styles[Math.floor(Math.random()*styles.length)];
+  let bot = new Car(i, "Bot " + i, 0.65, style);
 
-  cars.push(
-    new Car(i,"Bot "+i,0.65, style)
-  );
-}
+  bot.x = track[0].x;
+  bot.y = track[0].y;
+  bot.angle = Math.atan2(dy, dx);
+  bot.cp = 1;
+  bot.lap = 0;
 
-items=[];
-
-for(let i=0;i<8;i++){
-
-  let p=
-  track[Math.floor(Math.random()*track.length)];
-
-  items.push(
-
-    new ItemBox(
-
-      p.x+(Math.random()-0.5)*120,
-      p.y+(Math.random()-0.5)*120
-    )
-  );
-}
-
-running=false;
-
-countdown(()=>{
-running=true;
-});
-
+  cars.push(bot);
 }
 
 // ================= DRAW TRACK =================
