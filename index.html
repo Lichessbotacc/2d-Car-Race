@@ -847,6 +847,12 @@ for (let i = 1; i < n; i++) {
 
   cars.push(bot);
 }
+  running = false;
+
+countdown(() => {
+  running = true;
+});
+}
 
 // ================= DRAW TRACK =================
 function drawTrack(){
