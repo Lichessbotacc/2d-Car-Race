@@ -789,7 +789,7 @@ function score(){
   cars.forEach(c=>{
 
     // Zielcheckpoint
-    let target = checkpoints[this.cp];
+    let target = checkpoints[c.cp];
 
     // Distanz zum nächsten Checkpoint
     let dist = Math.hypot(target.x - c.x, target.y - c.y);
