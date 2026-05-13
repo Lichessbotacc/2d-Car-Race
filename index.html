@@ -800,7 +800,7 @@ let explosions = [];
 
 function startRace(){
 
-track = tracks[currentTrackIndex];
+track = tracks[currentTrackIndex] || tracks[0];
 
 cars = [];
 items = [];
@@ -847,9 +847,7 @@ for (let i = 1; i < n; i++) {
 
   cars.push(bot);
 }
-  running = false;
-
-countdown(() => {
+  countdown(() => {
   running = true;
 });
 }
