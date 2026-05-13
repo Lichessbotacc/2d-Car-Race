@@ -367,20 +367,18 @@ let sideX = -dirY;
 let sideY = dirX;
 
 // Jeder Bot fährt leicht anders
-let offset = 0;
+let baseTurn = 0.05 + this.skill * 0.1;
 
 if(this.style === "aggressive"){
-  offset = (Math.random()-0.5) * 120; // riskant, stark links/rechts
+  baseTurn *= 1.35;
 }
 
 if(this.style === "safe"){
-  offset = (Math.random()-0.5) * 40; // sehr stabil
+  baseTurn *= 0.75;
 }
 
 if(this.style === "random"){
-  baseTurn *= 1.0 + (
-    Math.sin(Date.now()*0.002 + this.id) * 0.2
-  );
+  baseTurn *= 1.0 + (Math.sin(Date.now()*0.002 + this.id) * 0.2);
 }
 
 let target = {
