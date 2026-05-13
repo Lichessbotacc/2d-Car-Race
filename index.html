@@ -129,6 +129,8 @@ let currentTrackIndex = 0;
 let track;
 
 const tracks = [
+
+  // ================= LEVEL 1 =================
   [
     {x:cx+300,y:cy},
     {x:cx+200,y:cy-200},
@@ -137,22 +139,29 @@ const tracks = [
     {x:cx-200,y:cy+200},
     {x:cx+100,y:cy+220}
   ],
+
+  // ================= LEVEL 2 (SCHLANGENFORM) =================
   [
-    {x:cx+250,y:cy},
-    {x:cx+350,y:cy-150},
-    {x:cx+150,y:cy-300},
-    {x:cx-200,y:cy-250},
-    {x:cx-350,y:cy+50},
-    {x:cx-100,y:cy+250}
+    {x:cx-450,y:cy},
+    {x:cx-250,y:cy-250},
+    {x:cx,y:cy-100},
+    {x:cx+250,y:cy-300},
+    {x:cx+450,y:cy},
+    {x:cx+200,y:cy+250},
+    {x:cx-100,y:cy+150},
+    {x:cx-350,y:cy+300}
   ],
+
+  // ================= LEVEL 3 (FAST RECHTECKIG / SHARP TURNS) =================
   [
-    {x:cx+400,y:cy},
-    {x:cx+200,y:cy-300},
-    {x:cx-200,y:cy-300},
-    {x:cx-400,y:cy},
-    {x:cx-200,y:cy+300},
-    {x:cx+200,y:cy+300}
+    {x:cx-500,y:cy-300},
+    {x:cx+500,y:cy-300},
+    {x:cx+550,y:cy},
+    {x:cx+400,y:cy+350},
+    {x:cx-400,y:cy+350},
+    {x:cx-550,y:cy},
   ]
+
 ];
 
 track = tracks[currentTrackIndex];
