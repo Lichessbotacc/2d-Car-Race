@@ -928,8 +928,15 @@ function score(){
   let html = "<h3>🏆 Live Ranking</h3>";
 
   sorted.forEach((c,i)=>{
-    html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
-  });
+
+  let levelText = "";
+
+  if(c.type === "weak") levelText = "LVL 1";
+  if(c.type === "middle") levelText = "LVL 2";
+  if(c.type === "hard") levelText = "LVL 3";
+
+  html += `${i+1}. ${c.name} (${levelText}) | Lap ${c.lap}<br>`;
+});
 
   document.getElementById("score").innerHTML = html;
 }
