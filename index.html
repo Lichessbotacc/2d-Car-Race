@@ -716,23 +716,23 @@ c.addEventListener("touchmove", e=>{
 });
 
 function showLevelMenu(){
-
   menu.style.display = "none";
-
-  document.getElementById("levelMenu")
-  .style.display = "flex";
+  ui.style.display = "none";   // 🔥 WICHTIG
+  document.getElementById("levelMenu").style.display = "flex";
 }
 
 function selectLevel(i){
 
   currentTrackIndex = i;
-
   track = tracks[currentTrackIndex];
 
-  document.getElementById("levelMenu")
-  .style.display = "none";
-
+  document.getElementById("levelMenu").style.display = "none";
+  menu.style.display = "none";
   ui.style.display = "block";
+
+  // safety reset
+  cars = [];
+  running = false;
 }
 
 function backToMenu(){
