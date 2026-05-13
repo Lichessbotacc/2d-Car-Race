@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -175,12 +176,12 @@ const trackWidth=70;
 
 // ================= CAR =================
 class Car{
-  constructor(i,name,skill=1, style="random"){
+  constructor(i,name,skill=1){
 
   this.skill = skill;
 
     this.name=name;
-this.style = style;
+
     // Richtung der Strecke
 let dx = track[1].x - track[0].x;
 let dy = track[1].y - track[0].y;
@@ -350,7 +351,36 @@ this.y = track[0].y;
     let error=(1-this.skill)*40;
 
     let next = track[this.cp];
-    let after = track[(this.cp + 1) % track.length];
+let after = track[(this.cp + 1) % track.length];
+
+// Ziel = Mischung aus aktuellem + nächstem Checkpoint
+let dirX = after.x - next.x;
+let dirY = after.y - next.y;
+
+let len = Math.hypot(dirX, dirY) || 1;
+
+dirX /= len;
+dirY /= len;
+
+// Seitliche Richtung
+let sideX = -dirY;
+let sideY = dirX;
+
+// Jeder Bot fährt leicht anders
+let offset = Math.sin(Date.now()*0.001 + this.name.length*3) * 60;
+
+let target = {
+
+  x:
+    next.x * 0.7 +
+    after.x * 0.3 +
+    sideX * offset,
+
+  y:
+    next.y * 0.7 +
+    after.y * 0.3 +
+    sideY * offset
+};
 
     // Ziel = Mischung aus aktuellem + nächstem Checkpoint
     let dirX = after.x - next.x;
@@ -366,19 +396,7 @@ let sideX = -dirY;
 let sideY = dirX;
 
 // Jeder Bot fährt leicht anders
-let offset = 0;
-
-if(this.style === "aggressive"){
-  offset = (Math.random()-0.5) * 120; // riskant, stark links/rechts
-}
-
-if(this.style === "safe"){
-  offset = (Math.random()-0.5) * 40; // sehr stabil
-}
-
-if(this.style === "random"){
-  offset = Math.sin(Date.now()*0.002 + this.name.length) * 80;
-}
+let offset = Math.sin(Date.now()*0.001 + this.name.length*3) * 60;
 
 let target = {
 
@@ -411,21 +429,7 @@ let target = {
 
     let ang=Math.atan2(dy,dx);
 
-    let baseTurn = 0.05 + this.skill * 0.1;
-
-if(this.style === "aggressive"){
-  baseTurn *= 1.35;   // schneller reagieren
-}
-
-if(this.style === "safe"){
-  baseTurn *= 0.75;   // ruhiger, stabiler
-}
-
-if(this.style === "random"){
-  baseTurn *= 1.0 + (Math.sin(Date.now()*0.002 + i)*0.2);
-}
-
-let turnSpeed = baseTurn;
+    let turnSpeed = 0.05 + this.skill * 0.1;
 
     let diff = ang - this.angle;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
@@ -821,13 +825,10 @@ cars.push(player);
 // BOTS
 for(let i=1;i<n;i++){
 
-  let styles = ["aggressive", "safe", "random"];
+cars.push(
+new Car(i,"Bot "+i,0.65)
+);
 
-  let style = styles[Math.floor(Math.random()*styles.length)];
-
-  cars.push(
-    new Car(i,"Bot "+i,0.65, style)
-  );
 }
 
 items=[];
