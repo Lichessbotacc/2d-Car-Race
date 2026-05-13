@@ -69,7 +69,7 @@ Spielername:
 <div id="menu">
   <h2>🏁 Racing Arena</h2>
 
-  <button onclick="showSettings()">▶ Start Game</button>
+  <button onclick="startGameFromMenu()">▶ Start Game</button>
   <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
 </div>
@@ -977,8 +977,13 @@ document
   playerItem=null;
 };
 
-loop();
 
+loop();
+function startGameFromMenu(){
+  menu.style.display = "none";
+  ui.style.display = "block";
+  startRace();
+}
 </script>
 
 </body>
