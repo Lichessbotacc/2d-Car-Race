@@ -300,11 +300,13 @@ this.y =
 
     // bessere Bots sind stabiler
     if(this.boostTimer > 0){
-  this.speed = 6;
+  this.currentSpeed = 6;
   this.boostTimer--;
 }else{
-  this.speed = this.targetSpeed;
+  this.currentSpeed = this.targetSpeed;
 }
+
+this.speed = this.currentSpeed;
 
     let error=(1-this.skill)*40;
 
@@ -480,6 +482,7 @@ function giveItem(car){
 
   car.item=
   pool[Math.floor(Math.random()*pool.length)];
+  car.itemCooldown = 0;
 
   if(car.isPlayer){
     playerItem=car.item;
@@ -822,7 +825,8 @@ function score(){
 
   let html = "<h3>🏆 Live Ranking</h3>";
 
-  if(sorted[0].bestLapTime !== Infinity){
+  let player = cars.find(c => c.isPlayer);
+  if(player && player.bestLapTime !== Infinity){
   html += ` | Best Lap: ${(sorted[0].bestLapTime/1000).toFixed(2)}s`;
 }
 
