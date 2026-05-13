@@ -418,7 +418,7 @@ let target = {
     let diff = ang - this.angle;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-    this.angle += diff * turnSpeed * skillMultiplier;
+    this.angle += diff * turnSpeed;
 
     this.x += Math.cos(this.angle)*this.speed;
     this.y += Math.sin(this.angle)*this.speed;
