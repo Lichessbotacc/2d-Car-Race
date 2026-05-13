@@ -127,6 +127,8 @@ const cy=c.height/2;
 
 let currentTrackIndex = 0;
 let track;
+let trackScale = 1;
+
 
 const tracks = [
 
@@ -729,11 +731,13 @@ function selectLevel(i){
   currentTrackIndex = i;
   track = tracks[currentTrackIndex];
 
+  updateTrackScale(); // 🔥 HIER EINFÜGEN
+
   document.getElementById("levelMenu").style.display = "none";
   menu.style.display = "none";
   ui.style.display = "block";
 
-  startRace(); // 🔥 DAS FEHLT
+  startRace();
 }
 
 function backToMenu(){
@@ -861,7 +865,10 @@ running=true;
 
 // ================= DRAW TRACK =================
 function drawTrack(){
-
+  
+  ctx.save();
+ctx.translate(cx, cy);
+ctx.scale(trackScale, trackScale);
   ctx.strokeStyle="#555";
   ctx.lineWidth=trackWidth*2;
 
@@ -914,6 +921,29 @@ for (let i = 0; i < track.length; i++) {
   ctx.lineTo(mx + nx * size, my + ny * size);
   ctx.stroke();
 }
+}
+function updateTrackScale(){
+
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+
+  for(let p of track){
+    if(p.x < minX) minX = p.x;
+    if(p.x > maxX) maxX = p.x;
+    if(p.y < minY) minY = p.y;
+    if(p.y > maxY) maxY = p.y;
+  }
+
+  let width = maxX - minX;
+  let height = maxY - minY;
+
+  let margin = 0.85;
+
+  trackScale = Math.min(
+    (c.width * margin) / width,
+    (c.height * margin) / height
+  );
+  ctx.restore();
 }
 
 // ================= SCORE (FIXED!) =================
