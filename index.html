@@ -139,6 +139,7 @@ this.y =
 
     this.speed=3;
     this.targetSpeed=3;
+    this.boostTimer=0;
 
     this.color=`hsl(${i*50},80%,60%)`;
 
@@ -188,7 +189,15 @@ this.y =
         this.angle += diff * 0.12;
       }
 
-      this.speed = this.targetSpeed;
+      if(this.boostTimer>0){
+
+        this.speed=6;
+        this.boostTimer--;
+
+        }else{
+
+        this.speed=this.targetSpeed;
+        }
 
       this.x += Math.cos(this.angle) * this.speed;
       this.y += Math.sin(this.angle) * this.speed;
@@ -210,7 +219,7 @@ this.y =
         target.y - this.y
       );
 
-      if(dist < 50){
+      if(dist < 90){
 
         this.cp++;
 
@@ -266,7 +275,15 @@ this.y =
     }
 
     // bessere Bots sind stabiler
-    this.speed = this.targetSpeed;
+    if(this.boostTimer>0){
+
+        this.speed=6;
+        this.boostTimer--;
+
+        }else{
+
+        this.speed=this.targetSpeed;
+        }
 
     let error=(1-this.skill)*40;
 
@@ -319,7 +336,7 @@ this.y =
     }
 
     // checkpoint FIX (kein Bug mehr!)
-    if(dist<50){
+    if(dist < 90){
       this.cp++;
 
       if(this.cp>=track.length){
@@ -882,7 +899,7 @@ document
 
   if(player.item==="boost"){
 
-    player.speed+=5;
+    player.boostTimer=60;
   }
 
   if(player.item==="spin"){
