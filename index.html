@@ -98,6 +98,21 @@ const track=[
   {x:cx-200,y:cy+200},
   {x:cx+100,y:cy+220}
 ];
+const checkpoints=[];
+
+for(let i=0;i<track.length;i++){
+
+  let a=track[i];
+  let b=track[(i+1)%track.length];
+
+  let mx=(a.x+b.x)/2;
+  let my=(a.y+b.y)/2;
+
+  checkpoints.push({
+    x:mx,
+    y:my
+  });
+}
 
 const trackWidth=70;
 
@@ -212,7 +227,7 @@ this.y =
         this.speed *= 0.9;
       }
 
-      let target = track[this.cp];
+      let target = checkpoints[this.cp];
 
       let dist = Math.hypot(
         target.x - this.x,
@@ -223,7 +238,7 @@ this.y =
 
         this.cp++;
 
-        if(this.cp >= track.length){
+        if(this.cp >= checkpoints.length){
           this.cp = 0;
           this.lap++;
 
@@ -339,7 +354,7 @@ this.y =
     if(dist < 90){
       this.cp++;
 
-      if(this.cp>=track.length){
+      if(this.cp >= checkpoints.length){
         this.cp=0;
         this.lap++;
 
@@ -774,7 +789,7 @@ function score(){
   cars.forEach(c=>{
 
     // Zielcheckpoint
-    let target = track[c.cp];
+    let target = checkpoints[this.cp];
 
     // Distanz zum nächsten Checkpoint
     let dist = Math.hypot(target.x - c.x, target.y - c.y);
