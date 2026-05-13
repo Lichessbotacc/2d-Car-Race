@@ -412,23 +412,7 @@ let target = {
 
     let ang=Math.atan2(dy,dx);
 
-    let skillMultiplier = 1;
-let error = 0;
-
-if(this.type === "weak"){
-  skillMultiplier = 0.7;
-  error = 25;
-}
-
-if(this.type === "middle"){
-  skillMultiplier = 1.0;
-  error = 12;
-}
-
-if(this.type === "hard"){
-  skillMultiplier = 1.25;
-  error = 4;
-}
+    
     let turnSpeed = 0.05 + this.skill * 0.1;
 
     let diff = ang - this.angle;
@@ -731,9 +715,7 @@ function selectLevel(i){
   menu.style.display = "none";
   ui.style.display = "block";
 
-  // safety reset
-  cars = [];
-  running = false;
+  startRace(); // 🔥 DAS FEHLT
 }
 
 function backToMenu(){
