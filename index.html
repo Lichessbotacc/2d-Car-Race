@@ -205,15 +205,7 @@ this.y =
         this.angle += diff * 0.12;
       }
 
-      if(this.boostTimer>0){
-
-        this.speed=6;
-        this.boostTimer--;
-
-        }else{
-
-        this.speed=this.targetSpeed;
-        }
+      
 
       this.x += Math.cos(this.angle) * this.speed;
       this.y += Math.sin(this.angle) * this.speed;
@@ -272,8 +264,8 @@ this.y =
       if(Math.random()<0.01){
 
         if(this.item==="boost"){
-          this.speed+=4;
-          this.item=null;
+          this.boostTimer = 60;
+          this.item = null;
         }
 
        if(this.item==="spin"){
@@ -307,15 +299,12 @@ this.y =
     }
 
     // bessere Bots sind stabiler
-    if(this.boostTimer>0){
-
-        this.speed=6;
-        this.boostTimer--;
-
-        }else{
-
-        this.speed=this.targetSpeed;
-        }
+    if(this.boostTimer > 0){
+  this.speed = 6;
+  this.boostTimer--;
+}else{
+  this.speed = this.targetSpeed;
+}
 
     let error=(1-this.skill)*40;
 
@@ -833,9 +822,9 @@ function score(){
 
   let html = "<h3>🏆 Live Ranking</h3>";
 
-  if(c.bestLapTime !== Infinity){
-      html += ` | Best Lap: ${(c.bestLapTime/1000).toFixed(2)}s`;
-    }
+  if(sorted[0].bestLapTime !== Infinity){
+  html += ` | Best Lap: ${(sorted[0].bestLapTime/1000).toFixed(2)}s`;
+}
 
   sorted.forEach((c,i)=>{
     html += `${i+1}. ${c.name} | Lap ${c.lap}<br>`;
