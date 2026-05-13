@@ -109,20 +109,30 @@ class Car{
 
     this.name=name;
 
-    let dx = track[1].x - track[0].x;
-    let dy = track[1].y - track[0].y;
+    // Richtung der Strecke
+let dx = track[1].x - track[0].x;
+let dy = track[1].y - track[0].y;
 
-    this.angle = Math.atan2(dy, dx);
+this.angle = Math.atan2(dy, dx);
 
-    this.x =
-    track[0].x
-    - Math.cos(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
-    - Math.cos(this.angle) * i * 35;
+// Normale der Strecke
+let len = Math.hypot(dx, dy);
+let nx = -dy / len;
+let ny = dx / len;
 
-    this.y =
-    track[0].y
-    - Math.sin(this.angle + Math.PI/2) * (i % 2 ? 25 : -25)
-    - Math.sin(this.angle) * i * 35;
+// Startposition sauber auf der Strecke
+let row = Math.floor(i / 2);
+let side = (i % 2 === 0 ? -1 : 1);
+
+this.x =
+  track[0].x
+  - dx / len * row * 40
+  + nx * side * 20;
+
+this.y =
+  track[0].y
+  - dy / len * row * 40
+  + ny * side * 20;
 
     this.cp=1;
     this.lap=0;
