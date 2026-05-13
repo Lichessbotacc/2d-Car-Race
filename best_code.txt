@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Racing Arena Fixed</title>
+<title>Racing Arena Elite</title>
 
 <style>
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
@@ -69,9 +69,45 @@ Spielername:
 <div id="menu">
   <h2>🏁 Racing Arena</h2>
 
-  <button onclick="showSettings()">▶ Start Game</button>
+  <button onclick="showLevelMenu()">▶ Start Game</button>
   <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
+</div>
+<div id="levelMenu" style="
+display:none;
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#111;
+z-index:20;
+color:white;
+
+
+flex-direction:column;
+justify-content:center;
+align-items:center;
+">
+
+<h2>🏁 Level auswählen</h2>
+
+<button onclick="selectLevel(0)">
+LEVEL 1
+</button>
+
+<button onclick="selectLevel(1)">
+LEVEL 2
+</button>
+
+<button onclick="selectLevel(2)">
+LEVEL 3
+</button>
+
+<button onclick="backToMenu()">
+⬅ Zurück
+</button>
+
 </div>
   
 <canvas id="c"></canvas>
@@ -89,15 +125,51 @@ c.height=innerHeight;
 const cx=c.width/2;
 const cy=c.height/2;
 
-// ================= TRACK (mehrere Checkpoints!) =================
-const track=[
-  {x:cx+300,y:cy},
-  {x:cx+200,y:cy-200},
-  {x:cx-100,y:cy-220},
-  {x:cx-300,y:cy-50},
-  {x:cx-200,y:cy+200},
-  {x:cx+100,y:cy+220}
+let currentTrackIndex = 0;
+let track;
+
+const tracks = [
+
+  // ================= LEVEL 1 =================
+  [
+    {x:cx+300,y:cy},
+    {x:cx+200,y:cy-200},
+    {x:cx-100,y:cy-220},
+    {x:cx-300,y:cy-50},
+    {x:cx-200,y:cy+200},
+    {x:cx+100,y:cy+220}
+  ],
+
+  // ================= LEVEL 2 (SCHLANGENFORM) =================
+  [
+    {x:cx-450,y:cy},
+    {x:cx-250,y:cy-250},
+    {x:cx,y:cy-100},
+    {x:cx+250,y:cy-300},
+    {x:cx+450,y:cy},
+    {x:cx+200,y:cy+250},
+    {x:cx-100,y:cy+150},
+    {x:cx-350,y:cy+300}
+  ],
+
+    // ================= LEVEL 3 (WILD CHAOS TRACK) =================
+  [
+    {x:cx-550,y:cy},
+    {x:cx-350,y:cy-350},
+    {x:cx,y:cy-120},
+    {x:cx+300,y:cy-420},
+    {x:cx+550,y:cy-50},
+    {x:cx+250,y:cy+120},
+    {x:cx+500,y:cy+420},
+    {x:cx,y:cy+250},
+    {x:cx-250,y:cy+500},
+    {x:cx-500,y:cy+180},
+    {x:cx-150,y:cy}
+  ]
+
 ];
+
+track = tracks[currentTrackIndex];
 
 const trackWidth=70;
 
@@ -121,18 +193,8 @@ let nx = -dy / len;
 let ny = dx / len;
 
 // Startposition sauber auf der Strecke
-let row = Math.floor(i / 2);
-let side = (i % 2 === 0 ? -1 : 1);
-
-this.x =
-  track[0].x
-  - dx / len * row * 40
-  + nx * side * 20;
-
-this.y =
-  track[0].y
-  - dy / len * row * 40
-  + ny * side * 20;
+this.x = track[0].x;
+this.y = track[0].y;
 
     this.cp=1;
     this.lap=0;
@@ -291,10 +353,33 @@ this.y =
     let after = track[(this.cp + 1) % track.length];
 
     // Ziel = Mischung aus aktuellem + nächstem Checkpoint
-    let target = {
-      x: next.x * 0.7 + after.x * 0.3,
-      y: next.y * 0.7 + after.y * 0.3
-    };
+    let dirX = after.x - next.x;
+let dirY = after.y - next.y;
+
+let len = Math.hypot(dirX, dirY) || 1;
+
+dirX /= len;
+dirY /= len;
+
+// Seitliche Richtung
+let sideX = -dirY;
+let sideY = dirX;
+
+// Jeder Bot fährt leicht anders
+let offset = Math.sin(Date.now()*0.001 + this.name.length*3) * 60;
+
+let target = {
+
+  x:
+    next.x * 0.7 +
+    after.x * 0.3 +
+    sideX * offset,
+
+  y:
+    next.y * 0.7 +
+    after.y * 0.3 +
+    sideY * offset
+};
 
     cars.forEach(o=>{
       if(o===this) return;
@@ -601,9 +686,37 @@ c.addEventListener("touchmove", e=>{
   };
 });
 
-function showSettings(){
+function showLevelMenu(){
+
   menu.style.display = "none";
+
+  document.getElementById("levelMenu")
+  .style.display = "flex";
+}
+
+function selectLevel(i){
+
+  currentTrackIndex = i;
+
+  track = tracks[currentTrackIndex];
+
+  document.getElementById("levelMenu")
+  .style.display = "none";
+
   ui.style.display = "block";
+}
+
+function backToMenu(){
+
+  document.getElementById("levelMenu")
+  .style.display = "none";
+
+  menu.style.display = "flex";
+}
+function showSettings(){
+
+  ui.style.display = "block";
+
 }
 // ================= TRACK HELP =================
 function closest(x,y){
@@ -660,6 +773,8 @@ let explosions = [];
 
 
 function startRace(){
+
+track = tracks[currentTrackIndex];
 
 cars=[];
 
@@ -827,8 +942,13 @@ explosions.filter(e=>e.life>0);
     i.update();
     i.draw();
   });
-  bananas=
-  bananas.filter(b=>!b.check(c));
+  cars.forEach(car=>{
+
+  bananas = bananas.filter(
+    b => !b.check(car)
+  );
+
+});
 
   let done=true;
 
