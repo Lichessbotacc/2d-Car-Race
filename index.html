@@ -967,10 +967,11 @@ explosions=
 explosions.filter(e=>e.life>0);
 
   items.forEach(i=>{
-    i.update();
-    i.draw();
-  });
-  cars.forEach(car=>{
+  i.update();
+  i.draw();
+});
+
+cars.forEach(car=>{
 
   bananas = bananas.filter(
     b => !b.check(car)
