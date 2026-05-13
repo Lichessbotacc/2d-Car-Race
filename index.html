@@ -84,7 +84,7 @@ background:#111;
 z-index:20;
 color:white;
 
-display:flex;
+
 flex-direction:column;
 justify-content:center;
 align-items:center;
@@ -661,10 +661,12 @@ function selectLevel(i){
 
   currentTrackIndex = i;
 
+  track = tracks[currentTrackIndex];
+
   document.getElementById("levelMenu")
   .style.display = "none";
 
-  showSettings();
+  ui.style.display = "block";
 }
 
 function backToMenu(){
@@ -673,6 +675,11 @@ function backToMenu(){
   .style.display = "none";
 
   menu.style.display = "flex";
+}
+function showSettings(){
+
+  ui.style.display = "block";
+
 }
 // ================= TRACK HELP =================
 function closest(x,y){
