@@ -487,7 +487,14 @@ let target = {
     ctx.fillStyle="white";
     ctx.font="12px Arial";
     ctx.textAlign="center";
-    ctx.fillText(this.name, this.x, this.y - 15);
+    let levelText = "";
+
+if(this.type === "weak") levelText = "LVL 1";
+if(this.type === "middle") levelText = "LVL 2";
+if(this.type === "hard") levelText = "LVL 3";
+
+// Name + Level anzeigen
+ctx.fillText(`${this.name} (${levelText})`, this.x, this.y - 15);
   }
 }
 class ItemBox{
