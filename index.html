@@ -752,6 +752,25 @@ function showSettings(){
   ui.style.display = "block";
 
 }
+// ================= CAMERA HELP =================
+function trackCenterX(){
+  let min = Infinity, max = -Infinity;
+  for(let p of track){
+    if(p.x < min) min = p.x;
+    if(p.x > max) max = p.x;
+  }
+  return (min + max) / 2;
+}
+
+function trackCenterY(){
+  let min = Infinity, max = -Infinity;
+  for(let p of track){
+    if(p.y < min) min = p.y;
+    if(p.y > max) max = p.y;
+  }
+  return (min + max) / 2;
+}
+
 // ================= TRACK HELP =================
 function closest(x,y){
 
