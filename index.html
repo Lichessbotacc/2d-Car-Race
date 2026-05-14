@@ -785,16 +785,14 @@ class Banana{
 
     let d=Math.hypot(car.x-this.x,car.y-this.y);
 
-    if(d<18){
+    if(d < 18){
 
-      car.spin=1;
+  car.spin = 1;
 
-      explosions.push(
-        new Explosion(this.x,this.y)
-      );
+  this.active = false;
 
-      return true;
-    }
+  return true;
+}
 
     return false;
   }
