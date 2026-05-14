@@ -373,8 +373,6 @@ this.y = track[0].y;
 
   let input = playerInputs[this.id];
 
-if(!input) return;
-
   if(input){
         let dx = input.x - this.x;
         let dy = input.y - this.y;
@@ -739,30 +737,28 @@ function handleTouch(t){
   for(let i=0;i<playerCount;i++){
 
     let ctrl = playerControls[i];
+
     if(!ctrl || !ctrl.joy) continue;
 
     let rect = ctrl.joy.getBoundingClientRect();
 
-    let cx = rect.left + rect.width/2;
-    let cy = rect.top + rect.height/2;
+    let centerX = rect.left + rect.width/2;
+    let centerY = rect.top + rect.height/2;
 
-    let dx = t.clientX - cx;
-    let dy = t.clientY - cy;
+    let dx = t.clientX - centerX;
+    let dy = t.clientY - centerY;
 
-    let dist = Math.hypot(dx,dy);
+    // Nur wenn Finger im Joystick ist
+    if(Math.hypot(dx,dy) < 80){
 
-    // 👉 nur aktiv wenn Finger im Joystick startet
-    if(dist < 120){
+      playerInputs[i] = {
 
-      if(playerCount > 1){
-        playerInputs[i] = {x: dx, y: dy};
-      } else {
-        let car = cars[i];
-        playerInputs[i] = {
-          x: car.x + dx * 6,
-          y: car.y + dy * 6
-        };
-      }
+        x:
+          cars[i].x + dx * 8,
+
+        y:
+          cars[i].y + dy * 8
+      };
     }
   }
 }
@@ -950,17 +946,21 @@ function closest(x,y){
   return best;
 }
 function zoomIn(){
-  if(playerCount > 1) return;
 
   cameraZoom += 0.1;
-  if(cameraZoom > maxZoom) cameraZoom = maxZoom;
+
+  if(cameraZoom > maxZoom){
+    cameraZoom = maxZoom;
+  }
 }
 
 function zoomOut(){
-  if(playerCount > 1) return;
 
   cameraZoom -= 0.1;
-  if(cameraZoom < minZoom) cameraZoom = minZoom;
+
+  if(cameraZoom < minZoom){
+    cameraZoom = minZoom;
+  }
 }
 function project(px,py,a,b){
 
@@ -1090,9 +1090,6 @@ running=true;
 
 }
 function startRaceMP(pCount, botCount, laps){
-  for(let i=0;i<pCount;i++){
-  playerInputs[i] = {x: 0, y: 0};
-}
   document.getElementById("useItemBtn")
 .style.display = "none";
 
@@ -1250,14 +1247,14 @@ function score(){
 
 // ================= LOOP =================
 function loop(){
-  if(playerCount > 1){
-  cameraZoom = 1;
-}
 
-ctx.save();
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.save();
 
 ctx.translate(c.width/2, c.height/2);
+
 ctx.scale(cameraZoom, cameraZoom);
+
 ctx.translate(-c.width/2, -c.height/2);
 
   drawTrack();
