@@ -731,10 +731,17 @@ c.addEventListener("touchmove", e=>{
     handleTouch(t);
   }
 });
+  c.addEventListener("touchstart", e=>{
+  for(let t of e.touches){
+    startTouch(t);
+  }
+});
 
-function handleTouch(t){
+
 
   // ================= SINGLEPLAYER =================
+  function handleTouch(t){
+
   if(gameMode === "sp"){
     let car = cars[0];
     if(!car) return;
@@ -746,7 +753,6 @@ function handleTouch(t){
     return;
   }
 
-  // ================= MULTIPLAYER =================
   for(let i=0;i<playerCount;i++){
 
     let ctrl = playerControls[i];
@@ -760,12 +766,34 @@ function handleTouch(t){
     let dx = t.clientX - centerX;
     let dy = t.clientY - centerY;
 
-    if(Math.hypot(dx,dy) < 80){
+    if(joyActive[i]){
 
       playerInputs[i] = {
-        x: cars[i].x + dx * 8,
-        y: cars[i].y + dy * 8
+        x: cars[i].x + dx * 6,
+        y: cars[i].y + dy * 6
       };
+    }
+  }
+}
+  function startTouch(t){
+
+  for(let i=0;i<playerCount;i++){
+
+    let ctrl = playerControls[i];
+    if(!ctrl || !ctrl.joy) continue;
+
+    let rect = ctrl.joy.getBoundingClientRect();
+
+    let centerX = rect.left + rect.width/2;
+    let centerY = rect.top + rect.height/2;
+
+    let dx = t.clientX - centerX;
+    let dy = t.clientY - centerY;
+
+    let dist = Math.hypot(dx,dy);
+
+    if(dist < 120){
+      joyActive[i] = true;
     }
   }
 }
@@ -1026,6 +1054,7 @@ let playerControls = [];
 let playerInputs = [];
 let playerCount = 1;
 let gameMode = "sp"; // "sp" oder "mp" 
+let joyActive = {};
 const minZoom = 0.5;
 const maxZoom = 2;
   
