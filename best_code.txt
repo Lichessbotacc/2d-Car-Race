@@ -193,6 +193,9 @@ LEVEL 3
 
 <script>
 
+window.onerror = function(msg, url, line, col, error){
+  alert("FEHLER:\n" + msg + "\nZeile: " + line);
+};
 const c=document.getElementById("c");
 const ctx=c.getContext("2d");
 let menu = document.getElementById("menu");
@@ -385,65 +388,46 @@ this.y = track[0].y;
           }
         }
       }
-    // BOT ITEM USAGE (FIX)
+ 
+      return;
+    }
+ // BOT ITEM LOGIC (NEU)
 if(!this.isPlayer && this.item){
 
-  let r = Math.random();
+  let use = false;
 
-  if(this.item === "boost" && r < 0.6){
-    this.boostTimer = 60;
-    this.item = null;
-  }
+  let enemyNear = cars.some(o =>
+    o !== this && Math.hypot(o.x-this.x,o.y-this.y) < 120
+  );
 
-  else if(this.item === "spin" && r < 0.4){
+  if(this.item === "spin" && enemyNear){
     cars.forEach(o=>{
-      if(o !== this){
-        let d = Math.hypot(o.x - this.x, o.y - this.y);
-        if(d < 120) o.spin = 1;
+      if(o !== this && Math.hypot(o.x-this.x,o.y-this.y) < 120){
+        o.spin = 1;
       }
     });
-    this.item = null;
+    use = true;
   }
 
-  else if(this.item === "banana" && r < 0.5){
+  if(this.item === "boost"){
+    this.boostTimer = 60;
+    use = true;
+  }
+
+  if(this.item === "banana"){
     bananas.push(new Banana(this.x, this.y));
-    this.item = null;
+    use = true;
   }
 
-  else if(this.item === "rocket" && r < 0.3){
+  if(this.item === "rocket"){
     rockets.push(new Rocket(this));
+    use = true;
+  }
+
+  if(use){
     this.item = null;
   }
 }
-
-      return;
-    }
-        if(!this.isPlayer && this.item){
-
-      if(Math.random()<0.01){
-
-        if(this.item==="boost"){
-          this.speed+=4;
-          this.item=null;
-        }
-
-       if(this.item==="spin"){
-
-          cars.forEach(o=>{
-
-            if(o===this) return;
-
-            let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-            if(d<100){
-              o.spin=1;
-            }
-          });
-        }
-
-        this.item=null;
-      }
-    }
 
     let skillFactor = this.skill;
 
