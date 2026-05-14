@@ -1000,16 +1000,11 @@ function loop(){
   ctx.clearRect(0,0,c.width,c.height);
   ctx.save();
 
-let player = cars.find(c=>c.isPlayer);
+ctx.translate(c.width/2, c.height/2);
 
-if(player){
+ctx.scale(cameraZoom, cameraZoom);
 
-  ctx.translate(c.width/2, c.height/2);
-
-  ctx.scale(cameraZoom, cameraZoom);
-
-  ctx.translate(-player.x, -player.y);
-}
+ctx.translate(-c.width/2, -c.height/2);
 
   drawTrack();
 bananas.forEach(b=>{
