@@ -231,6 +231,49 @@ window.onerror = function(msg, url, line, col, error){
 };
 const c=document.getElementById("c");
 const ctx=c.getContext("2d");
+let activeSPTouch = null;
+
+// Finger setzen
+c.addEventListener("touchstart", e => {
+  if (gameMode !== "sp") return;
+
+  e.preventDefault();
+
+  activeSPTouch = e.touches[0];
+
+  playerInputs[0] = {
+    x: activeSPTouch.clientX,
+    y: activeSPTouch.clientY
+  };
+});
+
+// Finger bewegen (FOLLOW FINGER)
+c.addEventListener("touchmove", e => {
+  if (gameMode !== "sp") return;
+  if (!activeSPTouch) return;
+
+  e.preventDefault();
+
+  for (let t of e.touches) {
+    if (t.identifier !== activeSPTouch.identifier) continue;
+
+    playerInputs[0] = {
+      x: t.clientX,
+      y: t.clientY
+    };
+  }
+});
+
+// Finger loslassen
+c.addEventListener("touchend", e => {
+  if (gameMode !== "sp") return;
+
+  for (let t of e.changedTouches) {
+    if (activeSPTouch && t.identifier === activeSPTouch.identifier) {
+      activeSPTouch = null;
+    }
+  }
+});
 let menu = document.getElementById("menu");
 let ui = document.getElementById("ui");
 
