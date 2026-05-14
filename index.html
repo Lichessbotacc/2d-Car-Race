@@ -605,13 +605,44 @@ function giveItem(car){
   }
 }
 c.addEventListener("touchstart", e=>{
+
   let t = e.touches[0];
   const rect = c.getBoundingClientRect();
 
   touchTarget = {
-    x: t.clientX - rect.left,
-    y: t.clientY - rect.top
+
+    x:
+      (t.clientX - rect.left - c.width/2)
+      / cameraZoom
+      + c.width/2,
+
+    y:
+      (t.clientY - rect.top - c.height/2)
+      / cameraZoom
+      + c.height/2
   };
+});
+
+c.addEventListener("touchmove", e=>{
+
+  e.preventDefault();
+
+  let t = e.touches[0];
+  const rect = c.getBoundingClientRect();
+
+  touchTarget = {
+
+    x:
+      (t.clientX - rect.left - c.width/2)
+      / cameraZoom
+      + c.width/2,
+
+    y:
+      (t.clientY - rect.top - c.height/2)
+      / cameraZoom
+      + c.height/2
+  };
+});
 });
 class Explosion{
 
@@ -730,16 +761,7 @@ class Rocket{
     ctx.restore();
   }
 }
-c.addEventListener("touchmove", e=>{
-  e.preventDefault();
 
-  let t = e.touches[0];
-  const rect = c.getBoundingClientRect();
-
-  touchTarget = {
-    x: t.clientX - rect.left,
-    y: t.clientY - rect.top
-  };
 });
 
 function showLevelMenu(){
