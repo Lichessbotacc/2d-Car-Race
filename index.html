@@ -107,7 +107,7 @@ font-weight:bold;
 </style>
 
 </head>
-<button id="useItemBtn">
+<button id="useItemBtn" ontouchstart="usePlayerItem(event)">
 🎁 Item: NONE
 </button>
 <div id="zoomControls">
@@ -665,7 +665,7 @@ if(car.isPlayer){
 }
 }
 c.addEventListener("touchstart", e=>{
-
+if(e.touches.length > 1) return;
   let t = e.touches[0];
   const rect = c.getBoundingClientRect();
 
@@ -684,7 +684,7 @@ c.addEventListener("touchstart", e=>{
 
 
 c.addEventListener("touchmove", e=>{
-
+if(e.touches.length > 1) return;
   e.preventDefault();
 
   let t = e.touches[0];
