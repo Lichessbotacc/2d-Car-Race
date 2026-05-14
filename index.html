@@ -310,6 +310,10 @@ this.y = track[0].y;
   update(){
 
     if(this.finished) return;
+    if(this.spin > 0){
+  this.angle += 0.3;
+  this.spin -= 0.02;
+}
     if(this.item==="boost"){
 
       this.speed+=0.15;
@@ -345,11 +349,19 @@ this.y = track[0].y;
         this.angle += diff * 0.12;
       }
 
-      if(this.boostTimer > 0){
-  this.speed = 6;
+      let baseSpeed = this.targetSpeed;
+
+// BOOST
+if(this.boostTimer > 0){
+  baseSpeed = 6;
   this.boostTimer--;
-} else if(this.spin <= 0) {
-  this.speed = this.targetSpeed;
+}
+
+// SPIN bremst dich
+if(this.spin > 0){
+  this.speed = baseSpeed * 0.4;
+}else{
+  this.speed = baseSpeed;
 }
 
       this.x += Math.cos(this.angle) * this.speed;
@@ -775,7 +787,7 @@ class Banana{
 
     if(d < 18){
 
-  car.spin = 1;
+  car.spin = Math.max(car.spin, 1);
 
   this.active = false;
 
@@ -812,7 +824,7 @@ class Rocket{
 
       if(d<20){
 
-        c.spin=1.5;
+        c.spin = Math.max(c.spin, 1.5);
 
         explosions.push(
           new Explosion(this.x,this.y)
