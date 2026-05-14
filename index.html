@@ -42,6 +42,15 @@ width:200px;
 margin:8px;
 font-size:16px;
 }
+#exitRaceBtn{
+position:absolute;
+top:20px;
+right:20px;
+z-index:100;
+width:180px;
+display:none;
+background:#d93b3b;
+} 
 #zoomControls{
 position:absolute;
 right:20px;
@@ -62,6 +71,10 @@ background:rgba(0,0,0,0.7);
 color:white;
 font-weight:bold;
 }
+
+<button id="exitRaceBtn" onclick="endRace()">
+❌ Rennen verlassen
+</button>
 </style>
 
 </head>
@@ -72,6 +85,31 @@ font-weight:bold;
 <body>
 
 <div id="ui" style="display:none;">
+
+<div id="setupPanel">
+
+<h3>🏁 Racing Arena</h3>
+
+Bots:
+<input id="bots" type="number" value="6">
+
+Runden:
+<input id="laps" type="number" value="5">
+
+Spielername:
+<input id="playerName" type="text" value="Player">
+
+<button onclick="startRace()">START</button>
+
+</div>
+
+<div id="score"></div>
+
+<div id="itemDisplay"></div>
+
+<button id="useItemBtn">USE ITEM</button>
+
+</div>
 <h3>🏁 Racing Arena</h3>
 
 Bots:
@@ -851,6 +889,27 @@ function project(px,py,a,b){
     y:a.y+vy*t
   };
 }
+function endRace(){
+
+  running = false;
+
+  cars = [];
+  bananas = [];
+  rockets = [];
+  explosions = [];
+  items = [];
+
+  document.getElementById("setupPanel")
+  .style.display = "block";
+
+  document.getElementById("exitRaceBtn")
+  .style.display = "none";
+
+  document.getElementById("score")
+  .innerHTML = "";
+
+  touchTarget = null;
+}
 
 // ================= GAME =================
 let cars=[];
@@ -916,6 +975,11 @@ for(let i=0;i<8;i++){
 }
 
 running=false;
+document.getElementById("setupPanel")
+.style.display = "none";
+
+document.getElementById("exitRaceBtn")
+.style.display = "block";
 
 countdown(()=>{
 running=true;
