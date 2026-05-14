@@ -737,28 +737,28 @@ function handleTouch(t){
   for(let i=0;i<playerCount;i++){
 
     let ctrl = playerControls[i];
-
     if(!ctrl || !ctrl.joy) continue;
 
     let rect = ctrl.joy.getBoundingClientRect();
 
-    let centerX = rect.left + rect.width/2;
-    let centerY = rect.top + rect.height/2;
+    let dx = t.clientX - (rect.left + rect.width/2);
+    let dy = t.clientY - (rect.top + rect.height/2);
 
-    let dx = t.clientX - centerX;
-    let dy = t.clientY - centerY;
-
-    // Nur wenn Finger im Joystick ist
     if(Math.hypot(dx,dy) < 80){
 
-      playerInputs[i] = {
+      // ✅ MULTIPLAYER: relative Steuerung
+      if(playerCount > 1){
+        playerInputs[i] = { x: dx, y: dy };
+      }
 
-        x:
-          cars[i].x + dx * 8,
-
-        y:
-          cars[i].y + dy * 8
-      };
+      // ✅ SINGLEPLAYER: Welt-Zielpunkt (wichtig!)
+      else{
+        let car = cars[i];
+        playerInputs[i] = {
+          x: car.x + dx * 6,
+          y: car.y + dy * 6
+        };
+      }
     }
   }
 }
