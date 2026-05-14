@@ -394,47 +394,35 @@ this.y = track[0].y;
  // BOT ITEM LOGIC (NEU)
 if(!this.isPlayer && this.item){
 
-  let use = false;
-
   let enemyNear = cars.some(o =>
-    o !== this && Math.hypot(o.x-this.x,o.y-this.y) < 120
+    o !== this && Math.hypot(o.x-this.x,o.y-this.y) < 200
   );
 
   if(this.item === "spin" && enemyNear){
     cars.forEach(o=>{
-      if(o !== this && Math.hypot(o.x-this.x,o.y-this.y) < 120){
+      if(o !== this && Math.hypot(o.x-this.x,o.y-this.y) < 200){
         o.spin = 1;
       }
     });
-    use = true;
   }
 
   if(this.item === "boost"){
     this.boostTimer = 60;
-    use = true;
   }
 
   if(this.item === "banana"){
-
-  let offset = 25; // Abstand hinter dem Bot
-
-  let bx = this.x - Math.cos(this.angle) * offset;
-  let by = this.y - Math.sin(this.angle) * offset;
-
-  bananas.push(new Banana(bx, by));
-
-  use = true;
-}
+    let bx = this.x - Math.cos(this.angle) * 25;
+    let by = this.y - Math.sin(this.angle) * 25;
+    bananas.push(new Banana(bx, by));
+  }
 
   if(this.item === "rocket"){
     rockets.push(new Rocket(this));
-    use = true;
   }
 
-  if(use){
-    this.item = null;
-  }
+  this.item = null;
 }
+  }
 
     let skillFactor = this.skill;
 
