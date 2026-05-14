@@ -973,7 +973,7 @@ function project(px,py,a,b){
   };
 }
 function endRace(){
-
+  
   running = false;
 
   cars = [];
@@ -984,6 +984,8 @@ function endRace(){
 
   document.getElementById("setupPanel")
   .style.display = "block";
+  document.getElementById("useItemBtn")
+.style.display = "none";
 
   document.getElementById("exitRaceBtn")
   .style.display = "none";
@@ -1072,6 +1074,8 @@ document.getElementById("setupPanel")
 
 document.getElementById("exitRaceBtn")
 .style.display = "block";
+document.getElementById("useItemBtn")
+.style.display = "block";
 
 countdown(()=>{
 running=true;
@@ -1079,6 +1083,8 @@ running=true;
 
 }
 function startRaceMP(pCount, botCount, laps){
+  document.getElementById("useItemBtn")
+.style.display = "none";
 
   document.getElementById("levelMenu").style.display = "none";
 document.getElementById("multiplayerMenu").style.display = "none";
