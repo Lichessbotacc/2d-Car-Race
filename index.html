@@ -657,22 +657,18 @@ class ItemBox{
 
   check(car){
 
-  if(car === this.owner && this.ignoreTime > 0){
-    return false;
+    if(!this.active) return;
+
+    let d=Math.hypot(car.x-this.x,car.y-this.y);
+
+    if(d<25){
+
+      this.active=false;
+      this.respawn=300;
+
+      giveItem(car);
+    }
   }
-
-  let d = Math.hypot(car.x - this.x, car.y - this.y);
-
-  if(d < 18){
-
-    car.spin = 1;
-    this.active = false;
-
-    return true;
-  }
-
-  return false;
-}
 }
 
 function giveItem(car){
@@ -769,14 +765,12 @@ class Explosion{
 }
 class Banana{
 
-  constructor(x,y,owner){
-  this.x = x;
-  this.y = y;
-  this.owner = owner;
-
-  this.active = true;
-  this.life = 600;
-  this.ignoreTime = 20; // 🔥 wichtig
+  constructor(x,y){
+    this.x=x;
+    this.y=y;
+    this.active = true;
+    this.life = 600;
+  }
 
   draw(){
 
@@ -791,11 +785,13 @@ class Banana{
     ctx.fill();
   }
   update(){
+
   this.life--;
-  this.ignoreTime--;
-  if(this.life <= 0) this.active = false;
-}
+
+  if(this.life <= 0){
+    this.active = false;
   }
+}
 
   check(car){
 
@@ -1269,7 +1265,7 @@ function usePlayerItem(e){
   }
 
   if(player.item==="banana"){
-    bananas.push(new Banana(player.x, player.y, player));
+    bananas.push(new Banana(player.x,player.y));
   }
 
   if(player.item==="rocket"){
