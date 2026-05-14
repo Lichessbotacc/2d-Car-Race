@@ -742,8 +742,7 @@ function startTouch(t){
 }
 
 c.addEventListener("touchmove", e=>{
-  e.preventDefault();
-
+  
   for(let t of e.touches){
 
     playerControls.forEach((ctrl,i)=>{
@@ -1542,6 +1541,34 @@ joy.active = false;
     if(i===3){ joy.style.right="20px"; joy.style.bottom="200px"; }
 
     document.body.appendChild(joy);
+    joy.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  joy.active = true;
+  joy.touchId = e.changedTouches[0].identifier;
+});
+
+joy.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+
+  for (let t of e.touches) {
+    if (t.identifier !== joy.touchId) continue;
+
+    let rect = joy.getBoundingClientRect();
+
+    let dx = t.clientX - (rect.left + rect.width / 2);
+    let dy = t.clientY - (rect.top + rect.height / 2);
+
+    let i = playerControls.indexOf(playerControls.find(c => c.joy === joy));
+    updateJoystick(i, dx, dy);
+  }
+});
+
+joy.addEventListener("touchend", (e) => {
+  joy.active = false;
+  joy.touchId = null;
+
+  joy.stick.style.transform = "translate(-50%,-50%)";
+});
 
     let btn = document.createElement("button");
     btn.className = "pui";
