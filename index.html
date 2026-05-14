@@ -365,9 +365,9 @@ this.y = track[0].y;
         target.y - this.y
       );
 
-      if(dist < 90){
+      if(crossedCheckpoint(this)){
 
-        this.cp++;
+  this.cp++;
 
         if(this.cp >= track.length){
           this.cp = 0;
@@ -548,7 +548,8 @@ let target = {
     }
 
     // checkpoint FIX (kein Bug mehr!)
-    if(dist < 90){
+    if(crossedCheckpoint(this)){
+
       this.cp++;
 
       if(this.cp>=track.length){
@@ -944,6 +945,64 @@ function project(px,py,a,b){
     y:a.y+vy*t
   };
 }
+function pointLineDistance(px,py,x1,y1,x2,y2){
+
+  let A = px - x1;
+  let B = py - y1;
+
+  let C = x2 - x1;
+  let D = y2 - y1;
+
+  let dot = A * C + B * D;
+  let lenSq = C * C + D * D;
+
+  let t = dot / lenSq;
+
+  t = Math.max(0, Math.min(1, t));
+
+  let lx = x1 + C * t;
+  let ly = y1 + D * t;
+
+  return Math.hypot(px - lx, py - ly);
+}
+
+function crossedCheckpoint(car){
+
+  let a = track[car.cp];
+  let b = track[(car.cp + 1) % track.length];
+
+  let mx = (a.x + b.x) / 2;
+  let my = (a.y + b.y) / 2;
+
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+
+  let len = Math.hypot(dx, dy) || 1;
+
+  dx /= len;
+  dy /= len;
+
+  let nx = -dy;
+  let ny = dx;
+
+  let size = 50;
+
+  let x1 = mx - nx * size;
+  let y1 = my - ny * size;
+
+  let x2 = mx + nx * size;
+  let y2 = my + ny * size;
+
+  let dist = pointLineDistance(
+    car.x,
+    car.y,
+    x1,y1,
+    x2,y2
+  );
+
+  return dist < 18;
+}
+  
 function endRace(){
 
   running = false;
