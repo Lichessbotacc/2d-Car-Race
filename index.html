@@ -303,6 +303,7 @@ this.y = track[0].y;
     this.points=0;
     this.spin = 0;
     this.isPlayer = false;
+    this.finishTime = 0;
 
     
   }
@@ -551,9 +552,10 @@ let target = {
         this.cp=0;
         this.lap++;
 
-        if(this.lap>=maxLaps){
-          this.finished=true;
-        }
+        if(this.lap >= maxLaps){
+            this.finished = true;
+            this.finishTime = performance.now();
+          }
       }
     }
 
@@ -1099,6 +1101,19 @@ for (let i = 0; i < track.length; i++) {
 function score(){
 
   cars.forEach(c=>{
+  if(c.finished){
+    // FIXIERT: kein neues progress mehr
+    return;
+  }
+
+  let target = track[c.cp];
+  let dist = Math.hypot(target.x - c.x, target.y - c.y);
+
+  c.progress =
+    c.lap * 100000 +
+    c.cp * 1000 -
+    dist;
+});
 
     // Zielcheckpoint
     let target = track[c.cp];
@@ -1113,7 +1128,20 @@ function score(){
       dist;
   });
 
-  let sorted = [...cars].sort((a,b)=>b.progress-a.progress);
+  let sorted = [...cars].sort((a,b)=>{
+
+  // beide fertig → nach Zielposition fix sortieren
+  if(a.finished && b.finished){
+    return a.finishTime - b.finishTime;
+  }
+
+  // einer fertig → der ist IMMER vorne
+  if(a.finished && !b.finished) return -1;
+  if(!a.finished && b.finished) return 1;
+
+  // normaler Rennvergleich
+  return b.progress - a.progress;
+});
 
   let html = "<h3>🏆 Live Ranking</h3>";
 
