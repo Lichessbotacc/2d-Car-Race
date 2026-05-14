@@ -340,16 +340,16 @@ this.y = track[0].y;
 
       if(touchTarget){
 
-        let dx = touchTarget.x - this.x;
-        let dy = touchTarget.y - this.y;
+        if(this.spin <= 0 && touchTarget){
+  let dx = touchTarget.x - this.x;
+  let dy = touchTarget.y - this.y;
 
-        let angle = Math.atan2(dy, dx);
+  let angle = Math.atan2(dy, dx);
+  let diff = angle - this.angle;
+  diff = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-        let diff = angle - this.angle;
-        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-
-        this.angle += diff * 0.12;
-      }
+  this.angle += diff * 0.12;
+}
 
       let baseSpeed = this.targetSpeed;
 
