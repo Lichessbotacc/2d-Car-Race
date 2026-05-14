@@ -338,73 +338,70 @@ this.y = track[0].y;
 
     if(this.isPlayer){
 
-  let baseSpeed = this.targetSpeed;
+      if(touchTarget){
 
-  // BOOST
-  if(this.boostTimer > 0){
-    baseSpeed = 6;
-    this.boostTimer--;
-  }
+        let dx = touchTarget.x - this.x;
+        let dy = touchTarget.y - this.y;
 
-  // SPIN = komplette Bot-Physik übernehmen
-  if(this.spin > 0){
+        let angle = Math.atan2(dy, dx);
 
-    this.angle += 0.3;      // wie Bots
-    this.speed = 1.2;       // fast kein Vortrieb
-    this.spin -= 0.03;
+        let diff = angle - this.angle;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-    // KEINE Steuerung!
-  } 
-  else {
-
-    // normale Steuerung nur wenn KEIN Spin
-    if(touchTarget){
-
-      let dx = touchTarget.x - this.x;
-      let dy = touchTarget.y - this.y;
-
-      let angle = Math.atan2(dy, dx);
-      let diff = angle - this.angle;
-      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-
-      this.angle += diff * 0.12;
-    }
-
-    this.speed = baseSpeed;
-  }
-
-  this.x += Math.cos(this.angle) * this.speed;
-  this.y += Math.sin(this.angle) * this.speed;
-
-  let center = closest(this.x,this.y);
-
-  let d = Math.hypot(center.x-this.x, center.y-this.y);
-
-  if(d > trackWidth){
-    this.x += (center.x-this.x)*0.08;
-    this.y += (center.y-this.y)*0.08;
-    this.speed *= 0.9;
-  }
-
-  let target = track[this.cp];
-
-  let dist = Math.hypot(target.x - this.x, target.y - this.y);
-
-  if(dist < 90){
-    this.cp++;
-
-    if(this.cp >= track.length){
-      this.cp = 0;
-      this.lap++;
-
-      if(this.lap >= maxLaps){
-        this.finished = true;
+        this.angle += diff * 0.12;
       }
-    }
-  }
 
-  return;
+      let baseSpeed = this.targetSpeed;
+
+// BOOST
+if(this.boostTimer > 0){
+  baseSpeed = 6;
+  this.boostTimer--;
 }
+
+// SPIN bremst dich
+if(this.spin > 0){
+  this.speed = baseSpeed * 0.4;
+}else{
+  this.speed = baseSpeed;
+}
+
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+
+      let center = closest(this.x,this.y);
+
+      let d = Math.hypot(center.x-this.x, center.y-this.y);
+
+      if(d > trackWidth){
+        this.x += (center.x-this.x)*0.08;
+        this.y += (center.y-this.y)*0.08;
+        this.speed *= 0.9;
+      }
+
+      let target = track[this.cp];
+
+      let dist = Math.hypot(
+        target.x - this.x,
+        target.y - this.y
+      );
+
+      if(dist < 90){
+
+        this.cp++;
+
+        if(this.cp >= track.length){
+          this.cp = 0;
+          this.lap++;
+
+          if(this.lap >= maxLaps){
+            this.finished = true;
+          }
+        }
+      }
+ 
+      return;
+    }
  // BOT ITEM LOGIC (NEU)
 if(!this.isPlayer && this.item){
 
