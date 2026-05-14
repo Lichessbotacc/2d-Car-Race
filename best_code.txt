@@ -415,9 +415,16 @@ if(!this.isPlayer && this.item){
   }
 
   if(this.item === "banana"){
-    bananas.push(new Banana(this.x, this.y));
-    use = true;
-  }
+
+  let offset = 25; // Abstand hinter dem Bot
+
+  let bx = this.x - Math.cos(this.angle) * offset;
+  let by = this.y - Math.sin(this.angle) * offset;
+
+  bananas.push(new Banana(bx, by));
+
+  use = true;
+}
 
   if(this.item === "rocket"){
     rockets.push(new Rocket(this));
