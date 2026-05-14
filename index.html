@@ -390,32 +390,30 @@ this.y = track[0].y;
     }
         if(!this.isPlayer && this.item){
 
-  let d = Math.random();
+      if(Math.random()<0.01){
 
-  if(this.item === "boost"){
-    this.boostTimer = 60;
-  }
+        if(this.item==="boost"){
+          this.speed+=4;
+          this.item=null;
+        }
 
-  if(this.item === "spin"){
-    cars.forEach(o=>{
-      if(o !== this){
-        let dist = Math.hypot(o.x - this.x, o.y - this.y);
-        if(dist < 120) o.spin = 1;
+       if(this.item==="spin"){
+
+          cars.forEach(o=>{
+
+            if(o===this) return;
+
+            let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+            if(d<100){
+              o.spin=1;
+            }
+          });
+        }
+
+        this.item=null;
       }
-    });
-  }
-
-  if(this.item === "banana"){
-    bananas.push(new Banana(this.x, this.y));
-  }
-
-  if(this.item === "rocket"){
-    rockets.push(new Rocket(this));
-  }
-
-  this.item = null;
-}  
-  }
+    }
 
     let skillFactor = this.skill;
 
