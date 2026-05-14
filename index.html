@@ -373,7 +373,7 @@ if(this.spin > 0){
 
       let d = Math.hypot(center.x-this.x, center.y-this.y);
 
-      if(d > trackWidth){
+      if(d > trackWidth && this.spin <= 0){
         this.x += (center.x-this.x)*0.08;
         this.y += (center.y-this.y)*0.08;
         this.speed *= 0.9;
