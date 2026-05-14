@@ -1360,9 +1360,20 @@ function usePlayerItem(e){
   document.getElementById("useItemBtn")
   .innerText = "🎁 Item: NONE";
 }
-  function showMultiplayerMenu(){
+  function showLevelMenu(){
+
   menu.style.display = "none";
-  document.getElementById("multiplayerMenu").style.display = "flex";
+
+  document.getElementById("levelMenu")
+  .style.display = "flex";
+}
+
+function showMultiplayerMenu(){
+
+  menu.style.display = "none";
+
+  document.getElementById("multiplayerMenu")
+  .style.display = "flex";
 }
 
 function startMultiplayer(){
