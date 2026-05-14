@@ -734,10 +734,22 @@ c.addEventListener("touchmove", e=>{
 
 function handleTouch(t){
 
+  // ================= SINGLEPLAYER =================
+  if(gameMode === "sp"){
+    let car = cars[0];
+    if(!car) return;
+
+    playerInputs[0] = {
+      x: t.clientX,
+      y: t.clientY
+    };
+    return;
+  }
+
+  // ================= MULTIPLAYER =================
   for(let i=0;i<playerCount;i++){
 
     let ctrl = playerControls[i];
-
     if(!ctrl || !ctrl.joy) continue;
 
     let rect = ctrl.joy.getBoundingClientRect();
@@ -748,16 +760,11 @@ function handleTouch(t){
     let dx = t.clientX - centerX;
     let dy = t.clientY - centerY;
 
-    // Nur wenn Finger im Joystick ist
     if(Math.hypot(dx,dy) < 80){
 
       playerInputs[i] = {
-
-        x:
-          cars[i].x + dx * 8,
-
-        y:
-          cars[i].y + dy * 8
+        x: cars[i].x + dx * 8,
+        y: cars[i].y + dy * 8
       };
     }
   }
@@ -1018,10 +1025,16 @@ let cameraZoom = 1;
 let playerControls = [];
 let playerInputs = [];
 let playerCount = 1;
+let gameMode = "sp"; // "sp" oder "mp" 
 const minZoom = 0.5;
 const maxZoom = 2;
+  
 
 function startRace(){
+  gameMode = "sp";
+playerInputs = [];
+playerControls = [];
+playerCount = 1;
 
 document.getElementById("levelMenu").style.display = "none";
 document.getElementById("multiplayerMenu").style.display = "none";
@@ -1090,6 +1103,10 @@ running=true;
 
 }
 function startRaceMP(pCount, botCount, laps){
+  gameMode = "mp";
+playerInputs = [];
+playerControls = [];
+playerCount = pCount;
   document.getElementById("useItemBtn")
 .style.display = "none";
 
