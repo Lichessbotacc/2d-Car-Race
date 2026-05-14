@@ -386,35 +386,65 @@ this.y = track[0].y;
         }
       }
     // BOT ITEM USAGE (FIX)
-// BOT ITEM USAGE (FIXED SINGLE SYSTEM)
 if(!this.isPlayer && this.item){
 
   let r = Math.random();
 
   if(this.item === "boost" && r < 0.6){
     this.boostTimer = 60;
+    this.item = null;
   }
 
-  else if(this.item === "spin" && r < 0.5){
+  else if(this.item === "spin" && r < 0.4){
     cars.forEach(o=>{
       if(o !== this){
         let d = Math.hypot(o.x - this.x, o.y - this.y);
         if(d < 120) o.spin = 1;
       }
     });
+    this.item = null;
   }
 
   else if(this.item === "banana" && r < 0.5){
     bananas.push(new Banana(this.x, this.y));
+    this.item = null;
   }
 
   else if(this.item === "rocket" && r < 0.3){
     rockets.push(new Rocket(this));
+    this.item = null;
   }
-
-  // Item IMMER danach entfernen (wichtig!)
-  this.item = null;
 }
+
+      return;
+    }
+        if(!this.isPlayer && this.item){
+
+      if(Math.random()<0.01){
+
+        if(this.item==="boost"){
+          this.speed+=4;
+          this.item=null;
+        }
+
+       if(this.item==="spin"){
+
+          cars.forEach(o=>{
+
+            if(o===this) return;
+
+            let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+            if(d<100){
+              o.spin=1;
+            }
+          });
+        }
+
+        this.item=null;
+      }
+    }
+
     let skillFactor = this.skill;
 
     if(Math.random()<(1-this.skill)*0.002){
@@ -1235,14 +1265,8 @@ function usePlayerItem(e){
   }
 
   if(player.item==="banana"){
-
-  let offset = 25; // Abstand hinter dem Auto
-
-  let bx = player.x - Math.cos(player.angle) * offset;
-  let by = player.y - Math.sin(player.angle) * offset;
-
-  bananas.push(new Banana(bx, by, player));
-}
+    bananas.push(new Banana(player.x,player.y));
+  }
 
   if(player.item==="rocket"){
     rockets.push(new Rocket(player));
