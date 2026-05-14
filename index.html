@@ -84,7 +84,7 @@ background:#111;
 z-index:20;
 color:white;
 
-
+display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
@@ -770,6 +770,30 @@ function trackCenterY(){
   }
   return (min + max) / 2;
 }
+function updateTrackScale(){
+
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+
+  for(let p of track){
+
+    if(p.x < minX) minX = p.x;
+    if(p.x > maxX) maxX = p.x;
+
+    if(p.y < minY) minY = p.y;
+    if(p.y > maxY) maxY = p.y;
+  }
+
+  let width = maxX - minX;
+  let height = maxY - minY;
+
+  let margin = 0.8;
+
+  trackScale = Math.min(
+    (c.width * margin) / width,
+    (c.height * margin) / height
+  );
+}
 
 // ================= TRACK HELP =================
 function closest(x,y){
@@ -888,10 +912,12 @@ function drawTrack(){
   ctx.save();
 
   // nur ZENTRIEREN (kein Scale hier!)
-  ctx.translate(
-    cx - (trackCenterX()),
-    cy - (trackCenterY())
-  );
+  ctx.translate(cx, cy);
+ctx.scale(trackScale, trackScale);
+ctx.translate(
+  -trackCenterX(),
+  -trackCenterY()
+);
 
   // Strecke
   ctx.strokeStyle="#555";
