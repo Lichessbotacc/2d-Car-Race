@@ -1205,56 +1205,38 @@ window.addEventListener("resize", ()=>{
   c.width = innerWidth;
   c.height = innerHeight;
 });
-document
-.getElementById("useItemBtn")
-.onclick=()=>{
+function usePlayerItem(e){
+  e.preventDefault();
+  e.stopPropagation();
 
-  let player=
-  cars.find(c=>c.isPlayer);
+  let player = cars.find(c => c.isPlayer);
 
   if(!player || !player.item) return;
 
-  if(player.item==="boost"){
-
-    player.boostTimer=60;
-  }
+  if(player.item==="boost") player.boostTimer=60;
 
   if(player.item==="spin"){
-
     cars.forEach(o=>{
-
       if(o===player) return;
-
-      let d=Math.hypot(
-        o.x-player.x,
-        o.y-player.y
-      );
-
-      if(d<120){
-        o.spin=1;
-      }
+      let d=Math.hypot(o.x-player.x,o.y-player.y);
+      if(d<120) o.spin=1;
     });
   }
 
   if(player.item==="banana"){
-
-    bananas.push(
-      new Banana(player.x,player.y)
-    );
+    bananas.push(new Banana(player.x,player.y));
   }
 
   if(player.item==="rocket"){
-
-    rockets.push(
-      new Rocket(player)
-    );
+    rockets.push(new Rocket(player));
   }
 
-  player.item=null;
-  playerItem=null;
-};
-document.getElementById("useItemBtn")
-.innerText = "🎁 Item: NONE";
+  player.item = null;
+  playerItem = null;
+
+  document.getElementById("useItemBtn")
+  .innerText = "🎁 Item: NONE";
+}
 loop();
 
 </script>
