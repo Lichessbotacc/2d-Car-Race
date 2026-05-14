@@ -373,6 +373,8 @@ this.y = track[0].y;
 
   let input = playerInputs[this.id];
 
+if(!input) return;
+
   if(input){
         let dx = input.x - this.x;
         let dy = input.y - this.y;
