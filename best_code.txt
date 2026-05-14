@@ -1265,14 +1265,8 @@ function usePlayerItem(e){
   }
 
   if(player.item==="banana"){
-
-  let offset = 25; // Abstand hinter dem Auto
-
-  let bx = player.x - Math.cos(player.angle) * offset;
-  let by = player.y - Math.sin(player.angle) * offset;
-
-  bananas.push(new Banana(bx, by, player));
-}
+    bananas.push(new Banana(player.x,player.y));
+  }
 
   if(player.item==="rocket"){
     rockets.push(new Rocket(player));
