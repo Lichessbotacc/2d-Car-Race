@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -84,7 +85,7 @@ background:#111;
 z-index:20;
 color:white;
 
-display:flex;
+
 flex-direction:column;
 justify-content:center;
 align-items:center;
@@ -127,8 +128,6 @@ const cy=c.height/2;
 
 let currentTrackIndex = 0;
 let track;
-let trackScale = 1;
-
 
 const tracks = [
 
@@ -731,13 +730,11 @@ function selectLevel(i){
   currentTrackIndex = i;
   track = tracks[currentTrackIndex];
 
-  updateTrackScale(); // 🔥 HIER EINFÜGEN
-
   document.getElementById("levelMenu").style.display = "none";
   menu.style.display = "none";
   ui.style.display = "block";
 
-  startRace();
+  startRace(); // 🔥 DAS FEHLT
 }
 
 function backToMenu(){
@@ -752,49 +749,6 @@ function showSettings(){
   ui.style.display = "block";
 
 }
-// ================= CAMERA HELP =================
-function trackCenterX(){
-  let min = Infinity, max = -Infinity;
-  for(let p of track){
-    if(p.x < min) min = p.x;
-    if(p.x > max) max = p.x;
-  }
-  return (min + max) / 2;
-}
-
-function trackCenterY(){
-  let min = Infinity, max = -Infinity;
-  for(let p of track){
-    if(p.y < min) min = p.y;
-    if(p.y > max) max = p.y;
-  }
-  return (min + max) / 2;
-}
-function updateTrackScale(){
-
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-
-  for(let p of track){
-
-    if(p.x < minX) minX = p.x;
-    if(p.x > maxX) maxX = p.x;
-
-    if(p.y < minY) minY = p.y;
-    if(p.y > maxY) maxY = p.y;
-  }
-
-  let width = maxX - minX;
-  let height = maxY - minY;
-
-  let margin = 0.8;
-
-  trackScale = Math.min(
-    (c.width * margin) / width,
-    (c.height * margin) / height
-  );
-}
-
 // ================= TRACK HELP =================
 function closest(x,y){
 
@@ -909,17 +863,6 @@ running=true;
 // ================= DRAW TRACK =================
 function drawTrack(){
 
-  ctx.save();
-
-  // nur ZENTRIEREN (kein Scale hier!)
-  ctx.translate(cx, cy);
-ctx.scale(trackScale, trackScale);
-ctx.translate(
-  -trackCenterX(),
-  -trackCenterY()
-);
-
-  // Strecke
   ctx.strokeStyle="#555";
   ctx.lineWidth=trackWidth*2;
 
@@ -933,37 +876,45 @@ ctx.translate(
   ctx.closePath();
   ctx.stroke();
 
-  // Checkpoints
-  ctx.strokeStyle="yellow";
-  ctx.lineWidth=4;
+  ctx.strokeStyle="white";
+  ctx.lineWidth=2;
+  ctx.setLineDash([10,10]);
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-  for (let i = 0; i < track.length; i++) {
+  // checkpoints sichtbar
+  // checkpoints als LINIE (Gates)
+ctx.strokeStyle = "yellow";
+ctx.lineWidth = 4;
 
-    let a = track[i];
-    let b = track[(i + 1) % track.length];
+for (let i = 0; i < track.length; i++) {
 
-    let mx = (a.x + b.x) / 2;
-    let my = (a.y + b.y) / 2;
+  let a = track[i];
+  let b = track[(i + 1) % track.length];
 
-    let dx = b.x - a.x;
-    let dy = b.y - a.y;
+  // Mittelpunkt zwischen zwei Punkten = Checkpoint-Position
+  let mx = (a.x + b.x) / 2;
+  let my = (a.y + b.y) / 2;
 
-    let len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
+  // Richtung der Strecke
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
 
-    let nx = -dy;
-    let ny = dx;
+  // Normale (90° gedreht) → damit Linie quer zur Strecke steht
+  let len = Math.hypot(dx, dy) || 1;
+  dx /= len;
+  dy /= len;
 
-    let size = 80;
+  let nx = -dy;
+  let ny = dx;
 
-    ctx.beginPath();
-    ctx.moveTo(mx - nx * size, my - ny * size);
-    ctx.lineTo(mx + nx * size, my + ny * size);
-    ctx.stroke();
-  }
+  let size = 80; // Länge der Checkpoint-Linie
 
-  ctx.restore();
+  ctx.beginPath();
+  ctx.moveTo(mx - nx * size, my - ny * size);
+  ctx.lineTo(mx + nx * size, my + ny * size);
+  ctx.stroke();
+}
 }
 
 // ================= SCORE (FIXED!) =================
