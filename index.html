@@ -72,9 +72,7 @@ color:white;
 font-weight:bold;
 }
 
-<button id="exitRaceBtn" onclick="endRace()">
-❌ Rennen verlassen
-</button>
+
 </style>
 
 </head>
@@ -82,6 +80,9 @@ font-weight:bold;
   <button onclick="zoomIn()">＋</button>
   <button onclick="zoomOut()">－</button>
 </div>
+<button id="exitRaceBtn" onclick="endRace()">
+❌ Rennen verlassen
+</button>
 <body>
 
 <div id="ui" style="display:none;">
@@ -110,23 +111,7 @@ Spielername:
 <button id="useItemBtn">USE ITEM</button>
 
 </div>
-<h3>🏁 Racing Arena</h3>
 
-Bots:
-<input id="bots" type="number" value="6">
-
-Runden:
-<input id="laps" type="number" value="5">
-
-Spielername:
-<input id="playerName" type="text" value="Player">
-
-<button onclick="startRace()">START</button>
-
-<div id="score"></div>
-<div id="itemDisplay"></div>
-<button id="useItemBtn">USE ITEM</button>
-</div>
 
 <div id="menu">
   <h2>🏁 Racing Arena</h2>
