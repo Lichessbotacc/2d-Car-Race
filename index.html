@@ -391,29 +391,40 @@ if(!this.isPlayer && this.item){
 
   let r = Math.random();
 
-  if(this.item === "boost" && r < 0.03){
-    this.boostTimer = 60;
-    this.item = null;
-  }
+  switch(this.item){
 
-  if(this.item === "spin" && r < 0.02){
-    cars.forEach(o=>{
-      if(o !== this){
-        let d = Math.hypot(o.x - this.x, o.y - this.y);
-        if(d < 120) o.spin = 1;
+    case "boost":
+      if(r < 0.5){
+        this.boostTimer = 60;
+        this.item = null;
       }
-    });
-    this.item = null;
-  }
+      break;
 
-  if(this.item === "banana" && r < 0.04){
-    bananas.push(new Banana(this.x, this.y));
-    this.item = null;
-  }
+    case "spin":
+      if(r < 0.4){
+        cars.forEach(o=>{
+          if(o !== this){
+            let d = Math.hypot(o.x - this.x, o.y - this.y);
+            if(d < 120) o.spin = 1;
+          }
+        });
+        this.item = null;
+      }
+      break;
 
-  if(this.item === "rocket" && r < 0.03){
-    rockets.push(new Rocket(this));
-    this.item = null;
+    case "banana":
+      if(r < 0.4){
+        bananas.push(new Banana(this.x, this.y));
+        this.item = null;
+      }
+      break;
+
+    case "rocket":
+      if(r < 0.3){
+        rockets.push(new Rocket(this));
+        this.item = null;
+      }
+      break;
   }
 }
 
