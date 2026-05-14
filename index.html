@@ -768,11 +768,15 @@ class Banana{
   constructor(x,y){
     this.x=x;
     this.y=y;
+    this.active = true;
+    this.life = 600;
   }
 
   draw(){
 
-    ctx.fillStyle="yellow";
+  if(!this.active) return;
+
+  ctx.fillStyle="yellow";
 
     ctx.beginPath();
 
@@ -780,6 +784,14 @@ class Banana{
 
     ctx.fill();
   }
+  update(){
+
+  this.life--;
+
+  if(this.life <= 0){
+    this.active = false;
+  }
+}
 
   check(car){
 
@@ -1144,6 +1156,7 @@ ctx.translate(-c.width/2, -c.height/2);
 
   drawTrack();
 bananas.forEach(b=>{
+  if(b.update) b.update();
   b.draw();
 });
 
