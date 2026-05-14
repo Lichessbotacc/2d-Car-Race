@@ -300,7 +300,6 @@ this.y = track[0].y;
     this.points=0;
     this.spin = 0;
     this.isPlayer = false;
-    this.item = null;
 
     
   }
@@ -391,42 +390,60 @@ if(!this.isPlayer && this.item){
 
   let r = Math.random();
 
-  switch(this.item){
+  if(this.item === "boost" && r < 0.6){
+    this.boostTimer = 60;
+    this.item = null;
+  }
 
-    case "boost":
-      if(r < 0.5){
-        this.boostTimer = 60;
-        this.item = null;
+  else if(this.item === "spin" && r < 0.4){
+    cars.forEach(o=>{
+      if(o !== this){
+        let d = Math.hypot(o.x - this.x, o.y - this.y);
+        if(d < 120) o.spin = 1;
       }
-      break;
+    });
+    this.item = null;
+  }
 
-    case "spin":
-      if(r < 0.4){
-        cars.forEach(o=>{
-          if(o !== this){
-            let d = Math.hypot(o.x - this.x, o.y - this.y);
-            if(d < 120) o.spin = 1;
-          }
-        });
-        this.item = null;
-      }
-      break;
+  else if(this.item === "banana" && r < 0.5){
+    bananas.push(new Banana(this.x, this.y));
+    this.item = null;
+  }
 
-    case "banana":
-      if(r < 0.4){
-        bananas.push(new Banana(this.x, this.y));
-        this.item = null;
-      }
-      break;
-
-    case "rocket":
-      if(r < 0.3){
-        rockets.push(new Rocket(this));
-        this.item = null;
-      }
-      break;
+  else if(this.item === "rocket" && r < 0.3){
+    rockets.push(new Rocket(this));
+    this.item = null;
   }
 }
+
+      return;
+    }
+        if(!this.isPlayer && this.item){
+
+      if(Math.random()<0.01){
+
+        if(this.item==="boost"){
+          this.speed+=4;
+          this.item=null;
+        }
+
+       if(this.item==="spin"){
+
+          cars.forEach(o=>{
+
+            if(o===this) return;
+
+            let d=Math.hypot(o.x-this.x,o.y-this.y);
+
+            if(d<100){
+              o.spin=1;
+            }
+          });
+        }
+
+        this.item=null;
+      }
+    }
 
     let skillFactor = this.skill;
 
