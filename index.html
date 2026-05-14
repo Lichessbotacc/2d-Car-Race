@@ -443,48 +443,30 @@ if(!this.isPlayer && this.item){
 
     let error=(1-this.skill)*40;
 
-    let next = track[this.cp];
-    let after = track[(this.cp + 1) % track.length];
+let target = track[this.cp];
 
-    // Ziel = Mischung aus aktuellem + nächstem Checkpoint
-    let dirX = after.x - next.x;
-let dirY = after.y - next.y;
-
-let len = Math.hypot(dirX, dirY) || 1;
-
-dirX /= len;
-dirY /= len;
-
-// Seitliche Richtung
-let sideX = -dirY;
-let sideY = dirX;
-
-// Jeder Bot fährt leicht anders
-let offset = 0;
+// leichte Fahrvariationen
+let offsetX = 0;
+let offsetY = 0;
 
 if(this.type === "weak"){
-  offset = Math.sin(Date.now()*0.003 + this.id) * 80;
+  offsetX = Math.sin(Date.now()*0.003 + this.id) * 25;
+  offsetY = Math.cos(Date.now()*0.003 + this.id) * 25;
 }
 
 if(this.type === "middle"){
-  offset = Math.sin(Date.now()*0.002 + this.id) * 40;
+  offsetX = Math.sin(Date.now()*0.002 + this.id) * 12;
+  offsetY = Math.cos(Date.now()*0.002 + this.id) * 12;
 }
 
 if(this.type === "hard"){
-  offset = Math.sin(Date.now()*0.0015 + this.id) * 15;
+  offsetX = Math.sin(Date.now()*0.0015 + this.id) * 5;
+  offsetY = Math.cos(Date.now()*0.0015 + this.id) * 5;
 }
 
-let target = {
-
-  x:
-    next.x * 0.7 +
-    after.x * 0.3 +
-    sideX * offset,
-
-  y:
-    next.y * 0.7 +
-    after.y * 0.3 +
-    sideY * offset
+target = {
+  x: target.x + offsetX,
+  y: target.y + offsetY
 };
 
     cars.forEach(o=>{
