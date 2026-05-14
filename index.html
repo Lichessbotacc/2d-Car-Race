@@ -149,7 +149,7 @@ Spielername:
   <h2>🏁 Racing Arena</h2>
 
   <button onclick="showLevelMenu()">▶ Start Game</button>
-  <button onclick="alert('Noch kein Multiplayer eingebaut 😄')">🌐 Multiplayer</button>
+  <button onclick="showMultiplayerMenu()">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
 </div>
 <div id="levelMenu" style="
@@ -168,7 +168,37 @@ flex-direction:column;
 justify-content:center;
 align-items:center;
 ">
+<div id="multiplayerMenu" style="
+display:none;
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#111;
+z-index:30;
+color:white;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+">
 
+<h2>🌐 Multiplayer</h2>
+
+Spieleranzahl (1-4):
+<input id="mpPlayers" type="number" value="2" min="1" max="4">
+
+Bots:
+<input id="mpBots" type="number" value="6">
+
+Runden:
+<input id="mpLaps" type="number" value="5">
+
+<button onclick="startMultiplayer()">▶ Start</button>
+
+<button onclick="backToMenu()">⬅ Zurück</button>
+
+</div>
 <h2>🏁 Level auswählen</h2>
 
 <button onclick="selectLevel(0)">
@@ -338,10 +368,11 @@ this.y = track[0].y;
 
     if(this.isPlayer){
 
-      if(touchTarget){
+  let input = playerInputs[this.id];
 
-        let dx = touchTarget.x - this.x;
-        let dy = touchTarget.y - this.y;
+  if(input){
+        let dx = input.x - this.x;
+        let dy = input.y - this.y;
 
         let angle = Math.atan2(dy, dx);
 
@@ -686,45 +717,37 @@ if(car.isPlayer){
 }
 }
 c.addEventListener("touchstart", e=>{
-if(e.touches.length > 1) return;
-  let t = e.touches[0];
-  const rect = c.getBoundingClientRect();
-
-  touchTarget = {
-
-    x:
-      (t.clientX - rect.left - c.width/2)
-      / cameraZoom
-      + c.width/2,
-
-    y:
-      (t.clientY - rect.top - c.height/2)
-      / cameraZoom
-      + c.height/2
-  };
-
+  for(let t of e.touches){
+    handleTouch(t);
+  }
+});
 
 c.addEventListener("touchmove", e=>{
-if(e.touches.length > 1) return;
   e.preventDefault();
+  for(let t of e.touches){
+    handleTouch(t);
+  }
+});
 
-  let t = e.touches[0];
+function handleTouch(t){
+
   const rect = c.getBoundingClientRect();
 
-  touchTarget = {
+  let x = (t.clientX - rect.left - c.width/2) / cameraZoom + c.width/2;
+  let y = (t.clientY - rect.top - c.height/2) / cameraZoom + c.height/2;
 
-    x:
-      (t.clientX - rect.left - c.width/2)
-      / cameraZoom
-      + c.width/2,
+  for(let i=0;i<playerCount;i++){
 
-    y:
-      (t.clientY - rect.top - c.height/2)
-      / cameraZoom
-      + c.height/2
-  };
-});
-});
+    let ctrl = playerControls[i];
+
+    let dx = x - ctrl.joy.getBoundingClientRect().left;
+    let dy = y - ctrl.joy.getBoundingClientRect().top;
+
+    if(Math.hypot(dx,dy) < 80){
+      playerInputs[i] = {x,y};
+    }
+  }
+}
 class Explosion{
 
   constructor(x,y){
@@ -976,6 +999,9 @@ let bananas = [];
 let rockets = [];
 let explosions = [];
 let cameraZoom = 1;
+let playerControls = [];
+let playerInputs = [];
+let playerCount = 1;
 const minZoom = 0.5;
 const maxZoom = 2;
 
@@ -1039,7 +1065,50 @@ running=true;
 });
 
 }
+function startRaceMP(pCount, botCount, laps){
 
+  track = tracks[currentTrackIndex];
+  cars = [];
+
+  playerInputs = [];
+  playerControls = [];
+
+  maxLaps = laps;
+  playerCount = pCount;
+
+  // 👤 PLAYERS
+  for(let i=0;i<pCount;i++){
+    let player = new Car(i, "P" + (i+1), 0.65);
+    player.isPlayer = true;
+    cars.push(player);
+  }
+
+  // 🤖 BOTS
+  for(let i=0;i<botCount;i++){
+    let type = botTypes[Math.floor(Math.random()*botTypes.length)];
+    cars.push(new Car(i+pCount, "Bot "+i, 0.65, type));
+  }
+
+  items = [];
+
+  for(let i=0;i<8;i++){
+    let p = track[Math.floor(Math.random()*track.length)];
+    items.push(new ItemBox(
+      p.x+(Math.random()-0.5)*120,
+      p.y+(Math.random()-0.5)*120
+    ));
+  }
+
+  createPlayerUI();
+
+  running = false;
+
+  document.getElementById("exitRaceBtn").style.display = "block";
+
+  countdown(()=>{
+    running = true;
+  });
+}
 // ================= DRAW TRACK =================
 function drawTrack(){
 
@@ -1283,6 +1352,73 @@ function usePlayerItem(e){
 
   document.getElementById("useItemBtn")
   .innerText = "🎁 Item: NONE";
+}
+  function showMultiplayerMenu(){
+  menu.style.display = "none";
+  document.getElementById("multiplayerMenu").style.display = "flex";
+}
+
+function startMultiplayer(){
+
+  playerCount = +document.getElementById("mpPlayers").value;
+  let bots = +document.getElementById("mpBots").value;
+  maxLaps = +document.getElementById("mpLaps").value;
+
+  document.getElementById("multiplayerMenu").style.display = "none";
+
+  startRaceMP(playerCount, bots, maxLaps);
+}
+  function createPlayerUI(){
+
+  document.querySelectorAll(".pui").forEach(e => e.remove());
+
+  playerControls = [];
+
+  for(let i=0;i<playerCount;i++){
+
+    let joy = document.createElement("div");
+    joy.className = "pui";
+    joy.style.position = "absolute";
+    joy.style.bottom = "40px";
+    joy.style.width = "120px";
+    joy.style.height = "120px";
+    joy.style.borderRadius = "50%";
+    joy.style.background = "rgba(255,255,255,0.15)";
+    joy.style.border = "2px solid white";
+    joy.style.zIndex = 200;
+
+    if(i===0) joy.style.left="20px";
+    if(i===1) joy.style.right="20px";
+    if(i===2){ joy.style.left="20px"; joy.style.bottom="200px"; }
+    if(i===3){ joy.style.right="20px"; joy.style.bottom="200px"; }
+
+    document.body.appendChild(joy);
+
+    let btn = document.createElement("button");
+    btn.className = "pui";
+    btn.innerText = "ITEM";
+    btn.style.position = "absolute";
+    btn.style.bottom = "170px";
+    btn.style.width = "100px";
+    btn.style.zIndex = 200;
+
+    if(i===0) btn.style.left="30px";
+    if(i===1) btn.style.right="30px";
+    if(i===2){ btn.style.left="30px"; btn.style.bottom="330px"; }
+    if(i===3){ btn.style.right="30px"; btn.style.bottom="330px"; }
+
+    document.body.appendChild(btn);
+
+    playerControls.push({
+      joy,
+      btn
+    });
+
+    btn.addEventListener("touchstart",(e)=>{
+      e.preventDefault();
+      usePlayerItemByIndex(i);
+    });
+  }
 }
 loop();
 
