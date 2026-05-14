@@ -719,11 +719,27 @@ if(car.isPlayer){
   "🎁 Item: " + car.item.toUpperCase();
 }
 }
-c.addEventListener("touchstart", e=>{
-  for(let t of e.touches){
-    handleTouch(t);
-  }
-});
+function startTouch(t){
+  playerControls.forEach((ctrl,i)=>{
+    if(!ctrl) return;
+
+    let rect = ctrl.joy.getBoundingClientRect();
+
+    let cx = rect.left + rect.width/2;
+    let cy = rect.top + rect.height/2;
+
+    let dx = t.clientX - cx;
+    let dy = t.clientY - cy;
+
+    if(Math.hypot(dx,dy) < 60){
+      ctrl.active = true;
+      ctrl.touchId = t.identifier;
+
+      // 🔥 direkt initial position setzen
+      updateJoystick(i, dx, dy);
+    }
+  });
+}
 
 c.addEventListener("touchmove", e=>{
   e.preventDefault();
@@ -748,14 +764,20 @@ c.addEventListener("touchmove", e=>{
   }
 });
   c.addEventListener("touchend", e=>{
-  playerControls.forEach(ctrl=>{
-    ctrl.active = false;
-    ctrl.touchId = null;
+  for(let t of e.changedTouches){
 
-    if(ctrl.stick){
-      ctrl.stick.style.transform = "translate(-50%,-50%)";
-    }
-  });
+    playerControls.forEach(ctrl=>{
+      if(ctrl.touchId !== t.identifier) return;
+
+      ctrl.active = false;
+      ctrl.touchId = null;
+
+      if(ctrl.stick){
+        ctrl.stick.style.transform = "translate(-50%,-50%)";
+      }
+    });
+
+  }
 });
 
 
