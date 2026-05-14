@@ -385,6 +385,36 @@ this.y = track[0].y;
           }
         }
       }
+    // BOT ITEM USAGE (FIX)
+if(!this.isPlayer && this.item){
+
+  let r = Math.random();
+
+  if(this.item === "boost" && r < 0.6){
+    this.boostTimer = 60;
+    this.item = null;
+  }
+
+  else if(this.item === "spin" && r < 0.4){
+    cars.forEach(o=>{
+      if(o !== this){
+        let d = Math.hypot(o.x - this.x, o.y - this.y);
+        if(d < 120) o.spin = 1;
+      }
+    });
+    this.item = null;
+  }
+
+  else if(this.item === "banana" && r < 0.5){
+    bananas.push(new Banana(this.x, this.y));
+    this.item = null;
+  }
+
+  else if(this.item === "rocket" && r < 0.3){
+    rockets.push(new Rocket(this));
+    this.item = null;
+  }
+}
 
       return;
     }
