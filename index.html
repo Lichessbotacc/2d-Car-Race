@@ -853,9 +853,12 @@ function selectLevel(i){
 
   document.getElementById("levelMenu").style.display = "none";
   menu.style.display = "none";
-  ui.style.display = "block";
 
-  startRace(); // 🔥 DAS FEHLT
+  ui.style.display = "block";
+  document.getElementById("setupPanel").style.display = "block";
+  document.getElementById("exitRaceBtn").style.display = "none";
+
+  startRace();
 }
 
 function backToMenu(){
