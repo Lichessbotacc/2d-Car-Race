@@ -1101,27 +1101,14 @@ for (let i = 0; i < track.length; i++) {
 function score(){
 
   cars.forEach(c=>{
-  if(c.finished){
-    // FIXIERT: kein neues progress mehr
-    return;
-  }
 
-  let target = track[c.cp];
-  let dist = Math.hypot(target.x - c.x, target.y - c.y);
+    if(c.finished){
+      return; // ❗ freeze
+    }
 
-  c.progress =
-    c.lap * 100000 +
-    c.cp * 1000 -
-    dist;
-});
-
-    // Zielcheckpoint
     let target = track[c.cp];
-
-    // Distanz zum nächsten Checkpoint
     let dist = Math.hypot(target.x - c.x, target.y - c.y);
 
-    // Mehr Fortschritt = bessere Position
     c.progress =
       c.lap * 100000 +
       c.cp * 1000 -
@@ -1130,31 +1117,29 @@ function score(){
 
   let sorted = [...cars].sort((a,b)=>{
 
-  // beide fertig → nach Zielposition fix sortieren
-  if(a.finished && b.finished){
-    return a.finishTime - b.finishTime;
-  }
+    // beide fertig → nach Zielzeit fix
+    if(a.finished && b.finished){
+      return a.finishTime - b.finishTime;
+    }
 
-  // einer fertig → der ist IMMER vorne
-  if(a.finished && !b.finished) return -1;
-  if(!a.finished && b.finished) return 1;
+    // einer fertig → der bleibt vorne
+    if(a.finished && !b.finished) return -1;
+    if(!a.finished && b.finished) return 1;
 
-  // normaler Rennvergleich
-  return b.progress - a.progress;
-});
+    return b.progress - a.progress;
+  });
 
   let html = "<h3>🏆 Live Ranking</h3>";
 
   sorted.forEach((c,i)=>{
 
-  let levelText = "";
+    let levelText = "";
+    if(c.type === "weak") levelText = "LVL 1";
+    if(c.type === "middle") levelText = "LVL 2";
+    if(c.type === "hard") levelText = "LVL 3";
 
-  if(c.type === "weak") levelText = "LVL 1";
-  if(c.type === "middle") levelText = "LVL 2";
-  if(c.type === "hard") levelText = "LVL 3";
-
-  html += `${i+1}. ${c.name} (${levelText}) | Lap ${c.lap}<br>`;
-});
+    html += `${i+1}. ${c.name} (${levelText}) | Lap ${c.lap}<br>`;
+  });
 
   document.getElementById("score").innerHTML = html;
 }
