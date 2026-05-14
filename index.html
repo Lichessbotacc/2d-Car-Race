@@ -734,28 +734,27 @@ c.addEventListener("touchmove", e=>{
 
 function handleTouch(t){
 
-  const rect = c.getBoundingClientRect();
-
   for(let i=0;i<playerCount;i++){
 
     let ctrl = playerControls[i];
     if(!ctrl || !ctrl.joy) continue;
 
-    let joyRect = ctrl.joy.getBoundingClientRect();
+    let rect = ctrl.joy.getBoundingClientRect();
 
-    let dx = t.clientX - (joyRect.left + joyRect.width/2);
-    let dy = t.clientY - (joyRect.top + joyRect.height/2);
+    let cx = rect.left + rect.width/2;
+    let cy = rect.top + rect.height/2;
+
+    let dx = t.clientX - cx;
+    let dy = t.clientY - cy;
 
     let dist = Math.hypot(dx,dy);
 
-    if(dist < 80){
+    // 👉 nur aktiv wenn Finger im Joystick startet
+    if(dist < 120){
 
       if(playerCount > 1){
-        // MULTIPLAYER → joystick raw input
         playerInputs[i] = {x: dx, y: dy};
-      }
-      else{
-        // SINGLEPLAYER → world target
+      } else {
         let car = cars[i];
         playerInputs[i] = {
           x: car.x + dx * 6,
@@ -1089,6 +1088,9 @@ running=true;
 
 }
 function startRaceMP(pCount, botCount, laps){
+  for(let i=0;i<pCount;i++){
+  playerInputs[i] = {x: 0, y: 0};
+}
   document.getElementById("useItemBtn")
 .style.display = "none";
 
@@ -1250,12 +1252,7 @@ function loop(){
   cameraZoom = 1;
 }
 
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.save();
-
-if(playerCount > 1){
-  cameraZoom = 1; // Multiplayer fix
-}
+ctx.save();
 
 ctx.translate(c.width/2, c.height/2);
 ctx.scale(cameraZoom, cameraZoom);
