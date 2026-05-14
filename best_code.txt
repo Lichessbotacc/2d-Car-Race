@@ -9,14 +9,27 @@
 body{margin:0;overflow:hidden;background:#1b1b1b;font-family:Arial;}
 canvas{display:block;}
 #ui{
-position:absolute;top:10px;left:10px;
+position:absolute;
+top:10px;
+left:10px;
 background:rgba(0,0,0,0.75);
-padding:12px;border-radius:10px;
-width:260px;color:white;
+padding:12px;
+border-radius:10px;
+color:white;
+
+width:auto;
+min-width:180px;
+max-width:260px;
+display:inline-block;
 }
 input,button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;}
 button{background:#00c27a;color:white;font-weight:bold;}
-#score{margin-top:10px;font-size:13px;}
+#score{
+margin-top:10px;
+font-size:13px;
+display:inline-block;
+width:auto;
+}
 
 #menu{
 position:absolute;
@@ -42,6 +55,33 @@ width:200px;
 margin:8px;
 font-size:16px;
 }
+#exitRaceBtn{
+position:absolute;
+top:20px;
+right:20px;
+z-index:100;
+width:180px;
+display:none;
+background:#d93b3b;
+} 
+#useItemBtn{
+position:absolute;
+right:20px;
+bottom:170px;
+z-index:100;
+
+width:180px;
+padding:14px;
+
+background:#ffb300;
+color:white;
+
+font-weight:bold;
+font-size:16px;
+
+border:none;
+border-radius:12px;
+}
 #zoomControls{
 position:absolute;
 right:20px;
@@ -62,16 +102,27 @@ background:rgba(0,0,0,0.7);
 color:white;
 font-weight:bold;
 }
+
+
 </style>
 
 </head>
+<button id="useItemBtn" ontouchstart="usePlayerItem(event)">
+🎁 Item: NONE
+</button>
 <div id="zoomControls">
   <button onclick="zoomIn()">＋</button>
   <button onclick="zoomOut()">－</button>
 </div>
+<button id="exitRaceBtn" onclick="endRace()">
+❌ Rennen verlassen
+</button>
 <body>
 
 <div id="ui" style="display:none;">
+
+<div id="setupPanel">
+
 <h3>🏁 Racing Arena</h3>
 
 Bots:
@@ -85,10 +136,14 @@ Spielername:
 
 <button onclick="startRace()">START</button>
 
-<div id="score"></div>
-<div id="itemDisplay"></div>
-<button id="useItemBtn">USE ITEM</button>
 </div>
+
+<div id="score"></div>
+
+<div id="itemDisplay"></div>
+
+</div>
+
 
 <div id="menu">
   <h2>🏁 Racing Arena</h2>
@@ -330,6 +385,36 @@ this.y = track[0].y;
           }
         }
       }
+    // BOT ITEM USAGE (FIX)
+if(!this.isPlayer && this.item){
+
+  let r = Math.random();
+
+  if(this.item === "boost" && r < 0.6){
+    this.boostTimer = 60;
+    this.item = null;
+  }
+
+  else if(this.item === "spin" && r < 0.4){
+    cars.forEach(o=>{
+      if(o !== this){
+        let d = Math.hypot(o.x - this.x, o.y - this.y);
+        if(d < 120) o.spin = 1;
+      }
+    });
+    this.item = null;
+  }
+
+  else if(this.item === "banana" && r < 0.5){
+    bananas.push(new Banana(this.x, this.y));
+    this.item = null;
+  }
+
+  else if(this.item === "rocket" && r < 0.3){
+    rockets.push(new Rocket(this));
+    this.item = null;
+  }
+}
 
       return;
     }
@@ -600,12 +685,17 @@ function giveItem(car){
   car.item=
   pool[Math.floor(Math.random()*pool.length)];
 
-  if(car.isPlayer){
-    playerItem=car.item;
-  }
+if(car.isPlayer){
+
+  playerItem = car.item;
+
+  document.getElementById("useItemBtn")
+  .innerText =
+  "🎁 Item: " + car.item.toUpperCase();
+}
 }
 c.addEventListener("touchstart", e=>{
-
+if(e.touches.length > 1) return;
   let t = e.touches[0];
   const rect = c.getBoundingClientRect();
 
@@ -624,7 +714,7 @@ c.addEventListener("touchstart", e=>{
 
 
 c.addEventListener("touchmove", e=>{
-
+if(e.touches.length > 1) return;
   e.preventDefault();
 
   let t = e.touches[0];
@@ -678,11 +768,15 @@ class Banana{
   constructor(x,y){
     this.x=x;
     this.y=y;
+    this.active = true;
+    this.life = 600;
   }
 
   draw(){
 
-    ctx.fillStyle="yellow";
+  if(!this.active) return;
+
+  ctx.fillStyle="yellow";
 
     ctx.beginPath();
 
@@ -690,21 +784,27 @@ class Banana{
 
     ctx.fill();
   }
+  update(){
+
+  this.life--;
+
+  if(this.life <= 0){
+    this.active = false;
+  }
+}
 
   check(car){
 
     let d=Math.hypot(car.x-this.x,car.y-this.y);
 
-    if(d<18){
+    if(d < 18){
 
-      car.spin=1;
+  car.spin = 1;
 
-      explosions.push(
-        new Explosion(this.x,this.y)
-      );
+  this.active = false;
 
-      return true;
-    }
+  return true;
+}
 
     return false;
   }
@@ -851,6 +951,27 @@ function project(px,py,a,b){
     y:a.y+vy*t
   };
 }
+function endRace(){
+
+  running = false;
+
+  cars = [];
+  bananas = [];
+  rockets = [];
+  explosions = [];
+  items = [];
+
+  document.getElementById("setupPanel")
+  .style.display = "block";
+
+  document.getElementById("exitRaceBtn")
+  .style.display = "none";
+
+  document.getElementById("score")
+  .innerHTML = "";
+
+  touchTarget = null;
+}
 
 // ================= GAME =================
 let cars=[];
@@ -916,6 +1037,11 @@ for(let i=0;i<8;i++){
 }
 
 running=false;
+document.getElementById("setupPanel")
+.style.display = "none";
+
+document.getElementById("exitRaceBtn")
+.style.display = "block";
 
 countdown(()=>{
 running=true;
@@ -1030,6 +1156,7 @@ ctx.translate(-c.width/2, -c.height/2);
 
   drawTrack();
 bananas.forEach(b=>{
+  if(b.update) b.update();
   b.draw();
 });
 
@@ -1119,55 +1246,44 @@ window.addEventListener("resize", ()=>{
   c.width = innerWidth;
   c.height = innerHeight;
 });
-document
-.getElementById("useItemBtn")
-.onclick=()=>{
+function usePlayerItem(e){
+  e.preventDefault();
+  e.stopPropagation();
 
-  let player=
-  cars.find(c=>c.isPlayer);
+  let player = cars.find(c => c.isPlayer);
 
   if(!player || !player.item) return;
 
-  if(player.item==="boost"){
-
-    player.boostTimer=60;
-  }
+  if(player.item==="boost") player.boostTimer=60;
 
   if(player.item==="spin"){
-
     cars.forEach(o=>{
-
       if(o===player) return;
-
-      let d=Math.hypot(
-        o.x-player.x,
-        o.y-player.y
-      );
-
-      if(d<120){
-        o.spin=1;
-      }
+      let d=Math.hypot(o.x-player.x,o.y-player.y);
+      if(d<120) o.spin=1;
     });
   }
 
   if(player.item==="banana"){
 
-    bananas.push(
-      new Banana(player.x,player.y)
-    );
-  }
+  let offset = 25; // Abstand hinter dem Auto
+
+  let bx = player.x - Math.cos(player.angle) * offset;
+  let by = player.y - Math.sin(player.angle) * offset;
+
+  bananas.push(new Banana(bx, by, player));
+}
 
   if(player.item==="rocket"){
-
-    rockets.push(
-      new Rocket(player)
-    );
+    rockets.push(new Rocket(player));
   }
 
-  player.item=null;
-  playerItem=null;
-};
+  player.item = null;
+  playerItem = null;
 
+  document.getElementById("useItemBtn")
+  .innerText = "🎁 Item: NONE";
+}
 loop();
 
 </script>
