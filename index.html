@@ -1014,6 +1014,12 @@ const maxZoom = 2;
 
 function startRace(){
 
+document.getElementById("levelMenu").style.display = "none";
+document.getElementById("multiplayerMenu").style.display = "none";
+
+menu.style.display = "none";
+ui.style.display = "block";
+
 track = tracks[currentTrackIndex];
 
 cars=[];
@@ -1073,6 +1079,12 @@ running=true;
 
 }
 function startRaceMP(pCount, botCount, laps){
+
+  document.getElementById("levelMenu").style.display = "none";
+document.getElementById("multiplayerMenu").style.display = "none";
+
+menu.style.display = "none";
+ui.style.display = "block";
 
   track = tracks[currentTrackIndex];
   cars = [];
