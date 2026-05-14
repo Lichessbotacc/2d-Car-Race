@@ -51,6 +51,24 @@ width:180px;
 display:none;
 background:#d93b3b;
 } 
+#useItemBtn{
+position:absolute;
+right:20px;
+bottom:170px;
+z-index:100;
+
+width:180px;
+padding:14px;
+
+background:#ffb300;
+color:white;
+
+font-weight:bold;
+font-size:16px;
+
+border:none;
+border-radius:12px;
+}
 #zoomControls{
 position:absolute;
 right:20px;
@@ -76,6 +94,9 @@ font-weight:bold;
 </style>
 
 </head>
+<button id="useItemBtn">
+🎁 Item: NONE
+</button>
 <div id="zoomControls">
   <button onclick="zoomIn()">＋</button>
   <button onclick="zoomOut()">－</button>
@@ -107,8 +128,6 @@ Spielername:
 <div id="score"></div>
 
 <div id="itemDisplay"></div>
-
-<button id="useItemBtn">USE ITEM</button>
 
 </div>
 
@@ -623,9 +642,14 @@ function giveItem(car){
   car.item=
   pool[Math.floor(Math.random()*pool.length)];
 
-  if(car.isPlayer){
-    playerItem=car.item;
-  }
+if(car.isPlayer){
+
+  playerItem = car.item;
+
+  document.getElementById("useItemBtn")
+  .innerText =
+  "🎁 Item: " + car.item.toUpperCase();
+}
 }
 c.addEventListener("touchstart", e=>{
 
@@ -1216,7 +1240,8 @@ document
   player.item=null;
   playerItem=null;
 };
-
+document.getElementById("useItemBtn")
+.innerText = "🎁 Item: NONE";
 loop();
 
 </script>
