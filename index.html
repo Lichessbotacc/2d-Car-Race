@@ -233,21 +233,28 @@ const tracks = [
 
   // ================= LEVEL 3 (LONG & NARROW) =================
 [
-  {x:cx-600,y:cy},
+  {x:cx-650,y:cy},
 
-  {x:cx-450,y:cy-180},
-  {x:cx-250,y:cy-320},
-  {x:cx,y:cy-220},
+  {x:cx-500,y:cy-200},
+  {x:cx-350,y:cy-350},
+  {x:cx-200,y:cy-200},
 
-  {x:cx+220,y:cy-80},
-  {x:cx+420,y:cy+80},
-  {x:cx+500,y:cy+260},
+  {x:cx-50,y:cy},
+  {x:cx+100,y:cy+150},
+  {x:cx+250,y:cy+300},
+  {x:cx+400,y:cy+150},
 
-  {x:cx+250,y:cy+340},
-  {x:cx,y:cy+260},
+  {x:cx+550,y:cy},
+  {x:cx+450,y:cy-200},
+  {x:cx+300,y:cy-350},
+  {x:cx+150,y:cy-200},
 
-  {x:cx-220,y:cy+340},
-  {x:cx-450,y:cy+180}
+  {x:cx,y:cy},
+  {x:cx-150,y:cy+200},
+  {x:cx-300,y:cy+350},
+  {x:cx-450,y:cy+200},
+
+  {x:cx-600,y:cy}
 ]
 
 ];
@@ -320,8 +327,8 @@ this.y = track[0].y;
       });
     }
 
-    
-if(this.isPlayer){
+    if(this.isPlayer){
+
       if(touchTarget){
 
         let dx = touchTarget.x - this.x;
@@ -365,11 +372,9 @@ if(this.isPlayer){
         target.y - this.y
       );
 
-      if(crossedCheckpoint(this) && !this.lastCheckpointHit){
+      if(dist < 90){
 
-  this.lastCheckpointHit = true;
-
-  this.cp++;
+        this.cp++;
 
         if(this.cp >= track.length){
           this.cp = 0;
@@ -380,43 +385,46 @@ if(this.isPlayer){
           }
         }
       }
-    if(!crossedCheckpoint(this)){
-  this.lastCheckpointHit = false;
-}
-}
-    // BOT ITEM USAGE (FIX)
+// ================= BOT ITEM SYSTEM =================
 if(!this.isPlayer && this.item){
 
   let r = Math.random();
 
-  if(this.item === "boost" && r < 0.6){
-    this.boostTimer = 60;
-    this.item = null;
-  }
+  switch(this.item){
 
-  else if(this.item === "spin" && r < 0.4){
-    cars.forEach(o=>{
-      if(o !== this){
-        let d = Math.hypot(o.x - this.x, o.y - this.y);
-        if(d < 120) o.spin = 1;
+    case "boost":
+      this.boostTimer = 60;
+      this.item = null;
+      break;
+
+    case "spin":
+      if(r < 0.5){
+        cars.forEach(o=>{
+          if(o !== this){
+            let d = Math.hypot(o.x - this.x, o.y - this.y);
+            if(d < 120) o.spin = 1;
+          }
+        });
+        this.item = null;
       }
-    });
-    this.item = null;
-  }
+      break;
 
-  else if(this.item === "banana" && r < 0.5){
-    bananas.push(new Banana(this.x, this.y));
-    this.item = null;
-  }
+    case "banana":
+      if(r < 0.3){
+        bananas.push(new Banana(this.x, this.y));
+        this.item = null;
+      }
+      break;
 
-  else if(this.item === "rocket" && r < 0.3){
-    rockets.push(new Rocket(this));
-    this.item = null;
+    case "rocket":
+      if(r < 0.25){
+        rockets.push(new Rocket(this));
+        this.item = null;
+      }
+      break;
   }
 }
-
-      
-        
+       
 
     let skillFactor = this.skill;
 
@@ -443,30 +451,48 @@ if(!this.isPlayer && this.item){
 
     let error=(1-this.skill)*40;
 
-let target = track[this.cp];
+    let next = track[this.cp];
+    let after = track[(this.cp + 1) % track.length];
 
-// leichte Fahrvariationen
-let offsetX = 0;
-let offsetY = 0;
+    // Ziel = Mischung aus aktuellem + nächstem Checkpoint
+    let dirX = after.x - next.x;
+let dirY = after.y - next.y;
+
+let len = Math.hypot(dirX, dirY) || 1;
+
+dirX /= len;
+dirY /= len;
+
+// Seitliche Richtung
+let sideX = -dirY;
+let sideY = dirX;
+
+// Jeder Bot fährt leicht anders
+let offset = 0;
 
 if(this.type === "weak"){
-  offsetX = Math.sin(Date.now()*0.003 + this.id) * 25;
-  offsetY = Math.cos(Date.now()*0.003 + this.id) * 25;
+  offset = Math.sin(Date.now()*0.003 + this.id) * 80;
 }
 
 if(this.type === "middle"){
-  offsetX = Math.sin(Date.now()*0.002 + this.id) * 12;
-  offsetY = Math.cos(Date.now()*0.002 + this.id) * 12;
+  offset = Math.sin(Date.now()*0.002 + this.id) * 40;
 }
 
 if(this.type === "hard"){
-  offsetX = Math.sin(Date.now()*0.0015 + this.id) * 5;
-  offsetY = Math.cos(Date.now()*0.0015 + this.id) * 5;
+  offset = Math.sin(Date.now()*0.0015 + this.id) * 15;
 }
 
-target = {
-  x: target.x + offsetX,
-  y: target.y + offsetY
+let target = {
+
+  x:
+    next.x * 0.7 +
+    after.x * 0.3 +
+    sideX * offset,
+
+  y:
+    next.y * 0.7 +
+    after.y * 0.3 +
+    sideY * offset
 };
 
     cars.forEach(o=>{
@@ -510,25 +536,18 @@ target = {
     }
 
     // checkpoint FIX (kein Bug mehr!)
-    if(crossedCheckpoint(this) && !this.lastCheckpointHit){
+    if(dist < 90){
+      this.cp++;
 
-  this.lastCheckpointHit = true;
+      if(this.cp>=track.length){
+        this.cp=0;
+        this.lap++;
 
-  this.cp++;
-
-  if(this.cp>=track.length){
-    this.cp=0;
-    this.lap++;
-
-    if(this.lap>=maxLaps){
-      this.finished=true;
+        if(this.lap>=maxLaps){
+          this.finished=true;
+        }
+      }
     }
-  }
-}
-
-if(!crossedCheckpoint(this)){
-  this.lastCheckpointHit = false;
-}
 
     // collision
     cars.forEach(o=>{
@@ -913,64 +932,6 @@ function project(px,py,a,b){
     y:a.y+vy*t
   };
 }
-function pointLineDistance(px,py,x1,y1,x2,y2){
-
-  let A = px - x1;
-  let B = py - y1;
-
-  let C = x2 - x1;
-  let D = y2 - y1;
-
-  let dot = A * C + B * D;
-  let lenSq = C * C + D * D;
-
-  let t = dot / lenSq;
-
-  t = Math.max(0, Math.min(1, t));
-
-  let lx = x1 + C * t;
-  let ly = y1 + D * t;
-
-  return Math.hypot(px - lx, py - ly);
-}
-
-function crossedCheckpoint(car){
-
-  let a = track[car.cp];
-  let b = track[(car.cp + 1) % track.length];
-
-  let mx = (a.x + b.x) / 2;
-  let my = (a.y + b.y) / 2;
-
-  let dx = b.x - a.x;
-  let dy = b.y - a.y;
-
-  let len = Math.hypot(dx, dy) || 1;
-
-  dx /= len;
-  dy /= len;
-
-  let nx = -dy;
-  let ny = dx;
-
-  let size = 50;
-
-  let x1 = mx - nx * size;
-  let y1 = my - ny * size;
-
-  let x2 = mx + nx * size;
-  let y2 = my + ny * size;
-
-  let dist = pointLineDistance(
-    car.x,
-    car.y,
-    x1,y1,
-    x2,y2
-  );
-
-  return dist < 18;
-}
-  
 function endRace(){
 
   running = false;
