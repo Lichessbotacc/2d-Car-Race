@@ -390,60 +390,47 @@ if(!this.isPlayer && this.item){
 
   let r = Math.random();
 
-  if(this.item === "boost" && r < 0.6){
-    this.boostTimer = 60;
-    this.item = null;
+  // BOOST → sofort oder bei Geradeausfahrt
+  if(this.item === "boost"){
+    if(r < 0.6){
+      this.boostTimer = 60;
+      this.item = null;
+    }
   }
 
-  else if(this.item === "spin" && r < 0.4){
-    cars.forEach(o=>{
-      if(o !== this){
-        let d = Math.hypot(o.x - this.x, o.y - this.y);
-        if(d < 120) o.spin = 1;
-      }
-    });
-    this.item = null;
+  // SPIN → offensiv nutzen wenn Gegner nah
+  else if(this.item === "spin"){
+    if(r < 0.7){
+      cars.forEach(o=>{
+        if(o !== this){
+          let d = Math.hypot(o.x - this.x, o.y - this.y);
+          if(d < 120) o.spin = 1;
+        }
+      });
+      this.item = null;
+    }
   }
 
-  else if(this.item === "banana" && r < 0.5){
-    bananas.push(new Banana(this.x, this.y));
-    this.item = null;
+  // BANANE → jetzt korrekt platzieren
+  else if(this.item === "banana"){
+    if(r < 0.8){
+      let offset = 30;
+      let bx = this.x - Math.cos(this.angle) * offset;
+      let by = this.y - Math.sin(this.angle) * offset;
+
+      bananas.push(new Banana(bx, by, this));
+      this.item = null;
+    }
   }
 
-  else if(this.item === "rocket" && r < 0.3){
-    rockets.push(new Rocket(this));
-    this.item = null;
+  // ROCKET
+  else if(this.item === "rocket"){
+    if(r < 0.5){
+      rockets.push(new Rocket(this));
+      this.item = null;
+    }
   }
 }
-
-      return;
-    }
-        if(!this.isPlayer && this.item){
-
-      if(Math.random()<0.01){
-
-        if(this.item==="boost"){
-          this.speed+=4;
-          this.item=null;
-        }
-
-       if(this.item==="spin"){
-
-          cars.forEach(o=>{
-
-            if(o===this) return;
-
-            let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-            if(d<100){
-              o.spin=1;
-            }
-          });
-        }
-
-        this.item=null;
-      }
-    }
 
     let skillFactor = this.skill;
 
