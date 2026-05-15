@@ -1134,12 +1134,25 @@ function updateItemUI(i){
   let ctrl = playerControls[i];
   let player = cars[i];
 
+  // 🔥 SINGLEPLAYER FALL
+  if(gameMode === "sp" && i === 0){
+    let btn = document.getElementById("useItemBtn");
+
+    if(player && player.item){
+      btn.innerText = "🎁 " + player.item.toUpperCase();
+    } else {
+      btn.innerText = "🎁 Item: NONE";
+    }
+    return;
+  }
+
+  // MULTIPLAYER FALL
   if(!ctrl) return;
 
   if(player && player.item){
     ctrl.btn.innerText = "🎁 " + player.item.toUpperCase();
   } else {
-    ctrl.btn.innerText = "🎁 NO ITEM";
+    ctrl.btn.innerText = "🎁 ITEM";
   }
 }
 let playerCount = 1;
