@@ -1443,6 +1443,13 @@ explosions.filter(e=>e.life>0);
 
 function countdown(cb){
 
+  // 🔥 UI AUSBLENDEN BEVOR ES LOSGEHT
+  document.getElementById("ui").style.display = "none";
+  document.getElementById("score").style.display = "none";
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("levelMenu").style.display = "none";
+  document.getElementById("multiplayerMenu").style.display = "none";
+
   let el=document.createElement("div");
   el.style.position="absolute";
   el.style.top="50%";
@@ -1462,6 +1469,11 @@ function countdown(cb){
         el.remove();
         clearInterval(int);
         cb();
+
+        // 🔥 NACH START UI SICHER AUS
+        document.getElementById("ui").style.display = "none";
+        document.getElementById("score").style.display = "none";
+
       },800);
       return;
     }
@@ -1471,10 +1483,6 @@ function countdown(cb){
 
   },1000);
 }
-window.addEventListener("resize", ()=>{
-  c.width = innerWidth;
-  c.height = innerHeight;
-});
 function usePlayerItem(e){
   e.preventDefault();
   e.stopPropagation();
