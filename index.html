@@ -241,10 +241,16 @@ c.addEventListener("touchstart", e => {
 
   activeSPTouch = e.touches[0];
 
-  playerInputs[0] = {
-    x: activeSPTouch.clientX,
-    y: activeSPTouch.clientY
-  };
+  let worldX =
+  (activeSPTouch.clientX - c.width / 2) / cameraZoom + c.width / 2;
+
+let worldY =
+  (activeSPTouch.clientY - c.height / 2) / cameraZoom + c.height / 2;
+
+playerInputs[0] = {
+  x: worldX,
+  y: worldY
+};
 });
 
 // Finger bewegen (FOLLOW FINGER)
@@ -257,10 +263,16 @@ c.addEventListener("touchmove", e => {
   for (let t of e.touches) {
     if (t.identifier !== activeSPTouch.identifier) continue;
 
-    playerInputs[0] = {
-      x: t.clientX,
-      y: t.clientY
-    };
+    let worldX =
+  (activeSPTouch.clientX - c.width / 2) / cameraZoom + c.width / 2;
+
+let worldY =
+  (activeSPTouch.clientY - c.height / 2) / cameraZoom + c.height / 2;
+
+playerInputs[0] = {
+  x: worldX,
+  y: worldY
+};
   }
 });
 
