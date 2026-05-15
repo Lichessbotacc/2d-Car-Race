@@ -1695,10 +1695,13 @@ if(playerCount === 3 || playerCount === 4){
 
   stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
 
-  playerInputs[i] = {
-    x: cars[i].x + dx * 4,
-    y: cars[i].y + dy * 4
-  };
+  let player = cars[i];
+
+if(player && player.item){
+  ctrl.btn.innerText = "🎁 " + player.item.toUpperCase();
+}else{
+  ctrl.btn.innerText = "🎁 ITEM";
+}
 }
   function usePlayerItemByIndex(i){
 
