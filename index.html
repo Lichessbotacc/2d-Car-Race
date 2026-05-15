@@ -756,12 +756,8 @@ function giveItem(car){
   pool[Math.floor(Math.random()*pool.length)];
 
 if(car.isPlayer){
-
   playerItem = car.item;
-
-  document.getElementById("useItemBtn")
-  .innerText =
-  "🎁 Item: " + car.item.toUpperCase();
+  updateItemUI(car.id);
 }
 }
 function startTouch(t){
@@ -1135,6 +1131,18 @@ let explosions = [];
 let cameraZoom = 1;
 let playerControls = [];
 let playerInputs = [];
+function updateItemUI(i){
+  let ctrl = playerControls[i];
+  let player = cars[i];
+
+  if(!ctrl) return;
+
+  if(player && player.item){
+    ctrl.btn.innerText = "🎁 " + player.item.toUpperCase();
+  } else {
+    ctrl.btn.innerText = "🎁 NO ITEM";
+  }
+}
 let playerCount = 1;
 let gameMode = "sp"; // "sp" oder "mp" 
 let joyActive = {};
@@ -1748,7 +1756,8 @@ if(player && player.item){
     rockets.push(new Rocket(player));
   }
 
-  player.item=null;
+  player.item = null;
+updateItemUI(i);
 }
 loop();
 
