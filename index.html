@@ -1639,13 +1639,31 @@ joy.addEventListener("touchend", (e) => {
     btn.innerText = "ITEM";
     btn.style.position = "absolute";
     btn.style.bottom = "170px";
-    btn.style.width = "100px";
+    btn.style.width = "130px";
+    btn.style.height = "50px";
+    btn.style.fontSize = "14px";
+    btn.style.borderRadius = "14px";
     btn.style.zIndex = 200;
 
-    if(i===0) btn.style.left="30px";
-    if(i===1) btn.style.right="30px";
-    if(i===2){ btn.style.left="30px"; btn.style.bottom="330px"; }
-    if(i===3){ btn.style.right="30px"; btn.style.bottom="330px"; }
+if(playerCount === 1){
+  btn.style.left="30px";
+  btn.style.bottom="170px";
+}
+
+if(playerCount === 2){
+  if(i===0) btn.style.left="30px";
+  if(i===1) btn.style.right="30px";
+  btn.style.bottom="170px";
+}
+
+if(playerCount === 3 || playerCount === 4){
+
+  if(i===0) { btn.style.left="30px"; btn.style.bottom="170px"; }
+  if(i===1) { btn.style.right="30px"; btn.style.bottom="170px"; }
+
+  if(i===2) { btn.style.left="30px"; btn.style.top="170px"; btn.style.bottom="auto"; }
+  if(i===3) { btn.style.right="30px"; btn.style.top="170px"; btn.style.bottom="auto"; }
+}
 
     document.body.appendChild(btn);
 
