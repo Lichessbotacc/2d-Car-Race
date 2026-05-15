@@ -1489,7 +1489,9 @@ function countdown(cb){
       setTimeout(()=>{
         el.remove();
         clearInterval(int);
-        cb();
+        if(gameMode === "sp") {
+  document.getElementById("ui").style.display = "block";
+}
 
         // 🔥 NACH START UI SICHER AUS
         document.getElementById("ui").style.display = "none";
