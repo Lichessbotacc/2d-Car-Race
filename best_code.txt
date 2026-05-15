@@ -1201,8 +1201,8 @@ for(let i=0;i<8;i++){
 }
 
 running=false;
-document.getElementById("setupPanel")
-.style.display = "none";
+document.getElementById("ui").style.display = "none";
+document.getElementById("score").style.display = "none";
 
 document.getElementById("exitRaceBtn")
 .style.display = "block";
@@ -1443,6 +1443,13 @@ explosions.filter(e=>e.life>0);
 
 function countdown(cb){
 
+  // 🔥 UI AUSBLENDEN BEVOR ES LOSGEHT
+  document.getElementById("ui").style.display = "none";
+  document.getElementById("score").style.display = "none";
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("levelMenu").style.display = "none";
+  document.getElementById("multiplayerMenu").style.display = "none";
+
   let el=document.createElement("div");
   el.style.position="absolute";
   el.style.top="50%";
@@ -1462,6 +1469,11 @@ function countdown(cb){
         el.remove();
         clearInterval(int);
         cb();
+
+        // 🔥 NACH START UI SICHER AUS
+        document.getElementById("ui").style.display = "none";
+        document.getElementById("score").style.display = "none";
+
       },800);
       return;
     }
@@ -1471,10 +1483,6 @@ function countdown(cb){
 
   },1000);
 }
-window.addEventListener("resize", ()=>{
-  c.width = innerWidth;
-  c.height = innerHeight;
-});
 function usePlayerItem(e){
   e.preventDefault();
   e.stopPropagation();
@@ -1580,10 +1588,21 @@ joy.dx = 0;
 joy.dy = 0;
 joy.active = false;
 
-    if(i===0) joy.style.left="20px";
-    if(i===1) joy.style.right="20px";
-    if(i===2){ joy.style.left="20px"; joy.style.bottom="200px"; }
-    if(i===3){ joy.style.right="20px"; joy.style.bottom="200px"; }
+    let isTop = i >= 2; // Spieler 3 + 4 oben
+
+if(i % 2 === 0){
+  joy.style.left = "20px";
+} else {
+  joy.style.right = "20px";
+}
+
+if(isTop){
+  joy.style.top = "20px";
+  joy.style.bottom = "auto";
+} else {
+  joy.style.bottom = "40px";
+  joy.style.top = "auto";
+}
 
     document.body.appendChild(joy);
     joy.addEventListener("touchstart", (e) => {
@@ -1620,13 +1639,31 @@ joy.addEventListener("touchend", (e) => {
     btn.innerText = "ITEM";
     btn.style.position = "absolute";
     btn.style.bottom = "170px";
-    btn.style.width = "100px";
+    btn.style.width = "130px";
+    btn.style.height = "50px";
+    btn.style.fontSize = "14px";
+    btn.style.borderRadius = "14px";
     btn.style.zIndex = 200;
 
-    if(i===0) btn.style.left="30px";
-    if(i===1) btn.style.right="30px";
-    if(i===2){ btn.style.left="30px"; btn.style.bottom="330px"; }
-    if(i===3){ btn.style.right="30px"; btn.style.bottom="330px"; }
+if(playerCount === 1){
+  btn.style.left="30px";
+  btn.style.bottom="170px";
+}
+
+if(playerCount === 2){
+  if(i===0) btn.style.left="30px";
+  if(i===1) btn.style.right="30px";
+  btn.style.bottom="170px";
+}
+
+if(playerCount === 3 || playerCount === 4){
+
+  if(i===0) { btn.style.left="30px"; btn.style.bottom="170px"; }
+  if(i===1) { btn.style.right="30px"; btn.style.bottom="170px"; }
+
+  if(i===2) { btn.style.left="30px"; btn.style.top="170px"; btn.style.bottom="auto"; }
+  if(i===3) { btn.style.right="30px"; btn.style.top="170px"; btn.style.bottom="auto"; }
+}
 
     document.body.appendChild(btn);
 
