@@ -1580,10 +1580,21 @@ joy.dx = 0;
 joy.dy = 0;
 joy.active = false;
 
-    if(i===0) joy.style.left="20px";
-    if(i===1) joy.style.right="20px";
-    if(i===2){ joy.style.left="20px"; joy.style.bottom="200px"; }
-    if(i===3){ joy.style.right="20px"; joy.style.bottom="200px"; }
+    let isTop = i >= 2; // Spieler 3 + 4 oben
+
+if(i % 2 === 0){
+  joy.style.left = "20px";
+} else {
+  joy.style.right = "20px";
+}
+
+if(isTop){
+  joy.style.top = "20px";
+  joy.style.bottom = "auto";
+} else {
+  joy.style.bottom = "40px";
+  joy.style.top = "auto";
+}
 
     document.body.appendChild(joy);
     joy.addEventListener("touchstart", (e) => {
