@@ -165,7 +165,7 @@ Spielername:
   <h2>🏁 Racing Arena</h2>
 
   <button onclick="showLevelMenu()">▶ Start Game</button>
-  <button onclick="showMultiplayerMenu()">🌐 Multiplayer</button>
+<button onclick="showMultiplayerMenu()">🌐 Multiplayer</button>
   <button onclick="alert('Settings kommen gleich unten im Menü')">⚙ Settings</button>
 </div>
   <div id="levelMenu" style="
@@ -1020,9 +1020,12 @@ class Rocket{
 
 
 
-function showLevelMenu(){
-  gameMode = "sp"; // 🔥 WICHTIG: Singleplayer setzen
+function showMultiplayerMenu(){
+  menu.style.display = "none";
+  document.getElementById("multiplayerMenu").style.display = "flex";
+}
 
+function showLevelMenu(){
   menu.style.display = "none";
   document.getElementById("levelMenu").style.display = "flex";
 }
@@ -1577,10 +1580,7 @@ function usePlayerItem(e){
 }
   
 
-function showMultiplayerMenu(){
-  menu.style.display = "none";
-  document.getElementById("multiplayerMenu").style.display = "flex";
-}
+
 
 function startMultiplayer(){
 
