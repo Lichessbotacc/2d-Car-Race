@@ -1697,6 +1697,15 @@ if(playerCount === 3 || playerCount === 4){
 
   let player = cars[i];
 
+let player = cars[i];
+
+if(player){
+  playerInputs[i] = {
+    x: player.x + dx * 6,
+    y: player.y + dy * 6
+  };
+}
+
 if(player && player.item){
   ctrl.btn.innerText = "🎁 " + player.item.toUpperCase();
 }else{
