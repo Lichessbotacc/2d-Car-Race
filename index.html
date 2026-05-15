@@ -412,20 +412,7 @@ this.y = track[0].y;
       this.speed+=0.15;
     }
 
-    if(this.item==="spin"){
-
-      cars.forEach(o=>{
-
-        if(o===this) return;
-
-        let d=Math.hypot(o.x-this.x,o.y-this.y);
-
-        if(d<80){
-
-      o.spin=1;
-        }
-      });
-    }
+  
 
     if(this.isPlayer){
 
