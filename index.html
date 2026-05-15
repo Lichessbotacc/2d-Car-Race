@@ -418,6 +418,26 @@ this.y = track[0].y;
 
   let input = playerInputs[this.id];
 
+  // PC KEYBOARD CONTROL
+if(gameMode === "sp"){
+
+  let moveX = 0;
+  let moveY = 0;
+
+  if(keys["w"]) moveY -= 1;
+  if(keys["s"]) moveY += 1;
+  if(keys["a"]) moveX -= 1;
+  if(keys["d"]) moveX += 1;
+
+  if(moveX !== 0 || moveY !== 0){
+
+    input = {
+      x: this.x + moveX * 100,
+      y: this.y + moveY * 100
+    };
+  }
+}
+
   if(input){
         let dx = input.x - this.x;
         let dy = input.y - this.y;
@@ -1137,7 +1157,29 @@ let playerControls = [];
 let playerInputs = [];
 let playerCount = 1;
 let gameMode = "sp"; // "sp" oder "mp" 
+let keys = {};
+
+window.addEventListener("keydown", e => {
+
+  keys[e.key.toLowerCase()] = true;
+
+  // SPACE = Item benutzen
+  if(gameMode === "sp" && e.code === "Space"){
+    e.preventDefault();
+
+    usePlayerItem({
+      preventDefault(){},
+      stopPropagation(){}
+    });
+  }
+});
+
+window.addEventListener("keyup", e => {
+
+  keys[e.key.toLowerCase()] = false;
+});
 let joyActive = {};
+let keys = {};
 const minZoom = 0.5;
 const maxZoom = 2;
   
@@ -1702,6 +1744,28 @@ joy.addEventListener("touchend", (e) => {
 
   player.item=null;
 }
+window.addEventListener("keydown", e=>{
+
+  keys[e.key.toLowerCase()] = true;
+
+  // SPACE = ITEM
+  if(e.code === "Space"){
+
+    e.preventDefault();
+
+    if(gameMode === "sp"){
+      usePlayerItem({
+        preventDefault(){},
+        stopPropagation(){}
+      });
+    }
+  }
+});
+
+window.addEventListener("keyup", e=>{
+
+  keys[e.key.toLowerCase()] = false;
+});
 loop();
 
 </script>
