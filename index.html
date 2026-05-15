@@ -1221,8 +1221,7 @@ for(let i=0;i<8;i++){
 }
 
 running=false;
-document.getElementById("ui").style.display = "block";
-gameMode = "sp";
+document.getElementById("ui").style.display = "none";
 document.getElementById("score").style.display = "none";
 
 document.getElementById("exitRaceBtn")
@@ -1489,9 +1488,7 @@ function countdown(cb){
       setTimeout(()=>{
         el.remove();
         clearInterval(int);
-        if(gameMode === "sp") {
-  document.getElementById("ui").style.display = "block";
-}
+        cb();
 
         // 🔥 NACH START UI SICHER AUS
         document.getElementById("ui").style.display = "none";
