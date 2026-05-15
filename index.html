@@ -252,8 +252,7 @@ playerInputs[0] = {
   y: worldY
 };
 });
-
-// Finger bewegen (FOLLOW FINGER)
+///Finger bewegen///
 c.addEventListener("touchmove", e => {
   if (gameMode !== "sp") return;
   if (!activeSPTouch) return;
@@ -261,20 +260,24 @@ c.addEventListener("touchmove", e => {
   e.preventDefault();
 
   for (let t of e.touches) {
+
     if (t.identifier !== activeSPTouch.identifier) continue;
 
+    // 🔥 WICHTIG:
+    activeSPTouch = t;
+
     let worldX =
-  (activeSPTouch.clientX - c.width / 2) / cameraZoom + c.width / 2;
+      (t.clientX - c.width / 2) / cameraZoom + c.width / 2;
 
-let worldY =
-  (activeSPTouch.clientY - c.height / 2) / cameraZoom + c.height / 2;
+    let worldY =
+      (t.clientY - c.height / 2) / cameraZoom + c.height / 2;
 
-playerInputs[0] = {
-  x: worldX,
-  y: worldY
-};
+    playerInputs[0] = {
+      x: worldX,
+      y: worldY
+    };
   }
-});
+}, { passive:false });
 
 // Finger loslassen
 c.addEventListener("touchend", e => {
