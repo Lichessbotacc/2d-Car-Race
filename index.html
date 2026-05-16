@@ -1369,10 +1369,12 @@ for (let i = 0; i < track.length; i++) {
 // ================= SCORE (FIXED!) =================
 function score(){
 
-  if(!singlePlayerMode){
-    document.getElementById("score").innerHTML = "";
-    return;
-  }
+ if(gameMode === "mp"){
+  document.getElementById("score").style.display = "none";
+  return;
+}
+
+document.getElementById("score").style.display = "block";
 
   cars.forEach(c=>{
 
