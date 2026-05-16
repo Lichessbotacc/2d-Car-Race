@@ -1251,7 +1251,7 @@ document.getElementById("useItemBtn")
 countdown(()=>{
 running=true;
 });
-
+document.getElementById("score").style.display = "block";
 }
 function startRaceMP(pCount, botCount, laps){
   gameMode = "mp";
@@ -1528,8 +1528,8 @@ function countdown(cb){
         cb();
 
         // 🔥 NACH START UI SICHER AUS
-        document.getElementById("ui").style.display = "none";
-        document.getElementById("score").style.display = "block";
+       document.getElementById("ui").style.display = "none";
+       document.getElementById("score").style.display = "block";
 
       },800);
       return;
