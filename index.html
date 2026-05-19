@@ -1528,9 +1528,9 @@ function countdown(cb){
         cb();
 
         // 🔥 NACH START UI SICHER AUS
-       document.getElementById("ui").style.display = "none";
-       document.getElementById("score").style.display = "block";
-
+       // 🔥 Setup ausblenden aber Ranking behalten
+document.getElementById("setupPanel").style.display = "none";
+document.getElementById("score").style.display = "block";
       },800);
       return;
     }
