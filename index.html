@@ -379,6 +379,11 @@ class Car{
 
   this.skill = skill;
   this.type = type;
+  // 🔥 BOSS BOT
+if(this.type === "boss"){
+  this.skill = 1;
+  this.targetSpeed = 4.8;
+}
   this.name=name;
   this.id = i;
 
@@ -585,6 +590,9 @@ if(this.type === "middle"){
 if(this.type === "hard"){
   offset = Math.sin(Date.now()*0.0015 + this.id) * 15;
 }
+if(this.type === "boss"){
+  offset = Math.sin(Date.now()*0.0008 + this.id) * 4;
+}
 
 let target = {
 
@@ -698,7 +706,7 @@ let target = {
 if(this.type === "weak") levelText = "LVL 1";
 if(this.type === "middle") levelText = "LVL 2";
 if(this.type === "hard") levelText = "LVL 3";
-
+if(this.type === "boss") levelText = "LVL 4";
 // Name + Level anzeigen
 ctx.fillText(`${this.name} (${levelText})`, this.x, this.y - 15);
   }
@@ -1138,7 +1146,7 @@ function endRace(){
 let cars=[];
 let maxLaps=5;
 let running=false;
-const botTypes = ["weak", "middle", "hard"];
+const botTypes = ["weak", "middle", "hard", "boss"];
 let touchTarget = null;
 let items = [];
 let playerItem = null;
