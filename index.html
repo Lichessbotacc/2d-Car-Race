@@ -580,15 +580,18 @@ let sideY = dirX;
 let offset = 0;
 
 if(this.type === "weak"){
-  offset = Math.sin(Date.now()*0.003 + this.id) * 80;
+  // 🔥 fährt sehr ungenau
+  offset = Math.sin(Date.now()*0.004 + this.id) * 120;
 }
 
 if(this.type === "middle"){
-  offset = Math.sin(Date.now()*0.002 + this.id) * 40;
+  // 🔥 deutlich schwächer
+  offset = Math.sin(Date.now()*0.003 + this.id) * 85;
 }
 
 if(this.type === "hard"){
-  offset = Math.sin(Date.now()*0.0015 + this.id) * 15;
+  // 🔥 immer noch gut aber nicht OP
+  offset = Math.sin(Date.now()*0.0022 + this.id) * 45;
 }
 if(this.type === "boss"){
   offset = Math.sin(Date.now()*0.0008 + this.id) * 4;
