@@ -1222,14 +1222,34 @@ cars.push(player);
 // BOTS
 for(let i=1;i<n;i++){
 
-let type = botTypes[Math.floor(Math.random() * botTypes.length)];
+  // 🔥 letzter Bot = Boss Bot
+  if(i === n - 1){
 
-cars.push(
-  new Car(i, "Bot " + i, 0.65, type)
-);
+    cars.push(
+      new Car(
+        i,
+        "BOSS",
+        1,
+        "boss"
+      )
+    );
 
+  }else{
+
+    let type = botTypes[
+      Math.floor(Math.random() * 3)
+    ];
+
+    cars.push(
+      new Car(
+        i,
+        "Bot " + i,
+        0.65,
+        type
+      )
+    );
+  }
 }
-
 items=[];
 
 for(let i=0;i<8;i++){
